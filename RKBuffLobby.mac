@@ -1,0 +1,35 @@
+Sub Main
+
+| *** VARIABLE DECLARATIONS
+	
+	/echo Done initializing macro!
+
+| *** INITIALIZATION
+	/echo Starting Lobby Buffbot
+
+| *** MAIN LOOP
+:loop
+	/call Tick
+	/goto :loop
+/return
+
+Sub Tick
+	/doevents
+
+	/alt act 992
+	/cast "Talisman of the Doomscale Rk. III"
+	/cast "Voice of Precognition Rk. III"
+	/delay 1s
+	/alt act 992
+	/alt act 264
+	/alt act 35
+	/cast "Hastening of Prokev Rk. III"
+	/cast "Talisman of the Faithful Rk. III"
+	/delay 1s
+	/alt act 992
+	/cast "Legion of Lucem Rk. III"	
+	/cast "Spirit of Bih`Li"
+	/delay 1s
+
+/return FALSE
+

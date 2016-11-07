@@ -13,25 +13,26 @@ Sub Main
 | *** VARIABLE DECLARATIONS
 	
 	/varset SpellMemSlot 11
-	
+	/varset InCombatStickToCommander FALSE
+	/varset StickFlags behind
 	/declare EchoMode bool outer FALSE
-	/declare OverhasteAura bool outer TRUE
-	/declare SlowMode bool outer TRUE
+	/declare OverhasteAura bool outer FALSE
+	/declare SlowMode bool outer FALSE
 	/varset MeleeMode TRUE
 	/varset SitBetweenCombat FALSE
 	
-	/varset MultipleTargetMez Wave of Dreams Rk. II
+	/varset CCMode ${Bool[${Group.MainAssist.ID} != ${Me.ID}]}
+	/varset CharmMode FALSE
+	
+	/varset AEMezSpell Wave of Dreams Rk. II
 	/varset SingleTargetMez Lullaby of the Forlorn
 	/varset SingleTargetMezLevelCap 95
-	/varset MultipleTargetMezLevelCap 93
-	
+	/varset AEMezSpellLevelCap 93
+
 	/call AddToArray "CombatActionSubs" "ExecuteBardCombatActions"
 	/call AddToArray "DefensiveActionSubs" "ExecuteDefensiveActions"	
-
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "CheckTwist"	
-	
+	/call AddToArray "CombatActionSubs" "CheckTwist"	
 	/call AddToArray "InvisModeSubs" "PeriodicGroupInvis"
-	
 	/call AddToArray "BurnCombatActionSubs" "ExecuteBurnBardCombatActions"
 	
 	/declare RequiemTimer timer outer 125
@@ -50,11 +51,13 @@ Sub Main
 Sub ExecuteBurnBardCombatActions
 	|/call RKItemCast "Circle of Power I Effect" "Unsuspected Striker"
 	|/call RKDisc "Reflexive Retort"
+
 	/if (${MeleeMode}) {
 		/call RKDisc "Thousand Blades"
 	} else {
 		/call RKDisc "Puretone Discipline"
 	}
+
 	/call RKAACast "Fundament: Third Spire of the Minstrels"
 	/call RKAACast "Dance of Blades"	
 /return FALSE
@@ -62,30 +65,48 @@ Sub ExecuteBurnBardCombatActions
 Sub BardNonCombatSubs
 	/if (${DebugMode}) /echo BardNonCombatSubs
 
+	/if (${Me.XTarget[1].ID}) {
+		/if (!${Twist}) {
+			/if (${Me.XTarget[1].PctHPs} < 95) {
+				/echo early escape because i'm a pussy
+				/return TRUE
+			}
+		}
+	} else {
+		/if (${Twist}) {
+			/twist off		
+			/stopcast
+		}
+	}
+	
 	/if (${OverhasteAura}) {
-		/if (!${Bool[${Me.Aura[Aura of the Composer Rk. II]}]}) {
-			/echo casting aura of the composer
+		/if (!${Bool[${Me.Aura[Aura of Maetanrus Rk. II]}]}) {
+			/echo casting aura of Maetanrus
 			/twist off
-			/delay 10s ${Me.SpellReady[Aura of the Composer]}
-			/call RKCast "Aura of the Composer" ${Me.ID}
+			/delay 10s ${Me.SpellReady[Aura of Maetanrus Rk. II]}
+			/call RKCast "Aura of Maetanrus Rk. II" ${Me.ID}
 			/delay 6s
 			/twist off
 			/return TRUE
 		}
 	} else {
-		/if (!${Bool[${Me.Aura[Aura of Renewal Rk. II]}]}) {
-			/echo casting aura of renewal
+		/if (!${Bool[${Me.Aura[Aura of Sionachie Rk. II]}]}) {
+			/echo casting Aura of Sionachie
 			/twist off
-			/delay 10s ${Me.SpellReady[Aura of Renewal Rk. II]}
-			/call RKCast "Aura of Renewal Rk. II" ${Me.ID}
+			/delay 10s ${Me.SpellReady[Aura of Sionachie Rk. II]}
+			/call RKCast "Aura of Sionachie Rk. II" ${Me.ID}
 			/delay 6s
 			/twist off
 			/return TRUE			
 		}
 	}	
 	
-	/if (!${Me.Buff[Symphony of Battle].ID}) /cast item "Rapier of Somber Notes"
-
+	/if (!${Me.Buff[Symphony of Battle].ID}) {
+		/twist off
+		/delay 1s
+		/cast item "Rapier of Somber Notes"
+		/delay 3s
+	}
 /return FALSE
 
 Sub CheckAESlow
@@ -97,6 +118,28 @@ Sub CheckAESlow
 
 Sub ExecuteBardCombatActions
 	/if (${DebugMode}) /echo ExecuteBardCombatActions
+
+	/if (${Me.GemTimer[${Me.Gem[Silisia's Lively Crescendo Rk. II]}]} == 0) {
+		/twist off
+		/stopcast
+		/delay 5
+		/call RKCast "Silisia's Lively Crescendo Rk. II" ${CurrentTargetId}
+		/if (${Macro.Return}) {
+			/delay 3s
+			/return FALSE
+		}
+	}
+	
+	/if (${Me.GemTimer[${Me.Gem[Dichotomic Psalm]}]} == 0 && ${Me.PctEndurance} > 10) {
+		/twist off
+		/stopcast
+		/delay 5
+		/call RKCast "Dichotomic Psalm" ${CurrentTargetId}
+		/if (${Macro.Return}) {
+			/delay 3s
+			/return FALSE
+		}
+	}
 	
 	/call RKAACast "Boastful Bellow"
 	/call RKAACast "Vainglorious Shout"	
@@ -108,30 +151,14 @@ Sub ExecuteBardCombatActions
 	/call RKAACast "Funeral Dirge"
 	/call RKAACast "Quick Time"	
 
-	/return FALSE
-	
-	/if (${Spawn[${targetId}].Distance} <= ${MaxMeleeDistance}) {
-		/if (${CurrentTargetId} && ${RequiemTimer} == 0 && !${Bool[${Target.Slowed}]}) {
-		
-			/echo casting Requiem of Time	
-			/twist off
-			/delay 4s ${Me.SpellReady[Requiem of Time]}
-			/call RKCast "Requiem of Time" ${CurrentTargetId}
-			/delay 4s
-			/twist off
-			/stopcast
-			/varset RequiemTimer 125
-			/return TRUE			
-		}
-	}
 /return FALSE
 
 Sub CheckSelos
 	/if (${DebugMode}) /echo CheckSelos
 	/if (${Me.Buff[Selo's Sonata].ID} && ${Me.Buff[Selo's Sonata].Duration} > 10) /return FALSE
 	/call RKAACast "Selo's Sonata"
-	/delay 2
-	/alt activate 231
+	|/delay 2
+	|/alt activate 231
 /return FALSE
 
 Sub PeriodicGroupInvis
@@ -142,9 +169,12 @@ Sub PeriodicGroupInvis
 Sub CheckTwist
 	/if (${DebugMode}) /echo CheckTwist
 
+	/if (${Me.XTarget[1].PctHPs} == 100) /return FALSE
+	
+	
 	/if (!${Twist}) {
-		/echo need to twist
-		/twist 1 2 3 4 5
+		/echo Twisting 6 7 8 9 10
+		/twist 6 7 8 9 10
 	}
 /return FALSE
 
@@ -164,3 +194,4 @@ Sub ExecuteDefensiveActions
 		/if (${Macro.Return}) /return TRUE	
 	}
 /return FALSE
+

@@ -8,14 +8,14 @@ Sub Main
 | *** VARIABLE DECLARATIONS
 
 	/varset MaxTargetDistance 5000
-	/varset TargetHpEngagePercentage 100
+
 	/varset UpperAggroThreshold 90
 	/varset MercBurnThreshold 80
 	
 	/call AddToArray "DetrimentalSpells" "My Favorite Nuke Rk. II"
 	/call AddToArray "DetrimentalSpells" "My Favorite Dot"
 	
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "CheckAura"
+	/call AddToArray "PreTargetAcquisitionSubs" "CheckAura"
 	/call AddToArray "CombatActionSubs" "CasterCombat"
 	
 	/echo Done initializing macro!

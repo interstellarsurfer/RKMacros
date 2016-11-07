@@ -1,78 +1,137 @@
 Sub CheckPosition
-	/if (${TankId} != ${Me.ID}) /return FALSE
-	/if (!${Bool[${Me.XTarget}]}) /return FALSE
+	/if (!${IsTank} || !${KeepAgroOnAdds}) /return FALSE
+	/if (!${Bool[${Me.XTarget[1].ID}]}) /return FALSE
+	/if (${BOTMode} == 5) /return FALSE
+
+	|/if (${StickTimer} > 0) /return FALSE
+	|/varset StickTimer 10
 	
-	/declare moveForward bool local FALSE	
-	/declare moveSideways bool local FALSE		
+	
+	|/if (${AECentroidX} != 0 && ${AECentroidY} != 0) /call FaceAECentroid
+	
+	/declare needToMove bool local FALSE	
 	/declare i int local
 	
+	/call FaceAECentroid
+
 	/for i 1 to ${Me.XTarget}
-		/call AmIFacingTarget ${Me.XTarget[${i}].ID} 70
-		/if (!${Macro.Return}) {
-			/call IsTargetFacingMe ${Me.XTarget[${i}].ID}		
-			/if (${Macro.Return}) /varset moveForward TRUE
+		/if (${Me.XTarget[${i}].Type.Equal[NPC]}) {
+			/if (${Me.XTarget[${i}].Distance} < 2) {
+				/if (${DebugMode}) /echo Target is too close, punching him back up
+				/call RKAACast "Press the Attack" ${Me.XTarget[${i}]}
+				| TODO: move this to warrior
+				/keypress s hold
+				/delay 1
+				/keypress s
+				/delay 1
+			}
+
+			/if (${Me.XTarget[${i}].Distance} > 25) {
+				/if (${DebugMode}) /echo Target is too far, sticking to them for a sec
+				/stick id ${Me.XTarget[${i}].ID} ${StickDistance}
+				/delay 1s
+				/stick off
+				/delay 2
+				/call FaceAECentroid
+			}
+
+			
+			/call AmIFacingTarget ${Me.XTarget[${i}].ID} 90
+			/if (!${Macro.Return}) {
+				/varset needToMove TRUE
+				/if (${DebugMode}) /echo needToMove - I'm not facing target
+			} else {
+				/if (${IsTank}) {
+					/call IsTargetFacingMe ${Me.XTarget[${i}].ID}
+					/if (!${Macro.Return}) {
+						/xt ${i}
+						/call SetStickTarget ${Target.ID} ${StickDistance} ${StickFlags}
+						/return FALSE
+					}
+				}
+			}
 		}
-	/next i	
-
-	/if (${moveForward}) {
-		/if (${DebugMode}) /echo need to move
-
-		/if (${DebugMode}) /echo side stepping
-		/if (${SideStepRight}) {
-			/keypress e hold
-			/keypress w hold
-			/delay 3
-			/keypress e
-			/keypress w
-		} else {
-			/keypress q hold
-			/keypress w hold
-			/delay 3
-			/keypress q
-			/keypress w
-		}
-		/delay 2
-		/if (${Target.ID}) /face fast nolook
-		
-		/if (${Defined[PostBackupAction]}) /call ${PostBackupAction}
-	}
-/return FALSE
-
-Sub CalculateTankingPosition
-	|Dead code, kept for future use
-	/if (${DebugMode}) /echo CalculateTankingPosition
-
-	/call CalculateMobsCentroid
+	/next i
 	
-	/declare angleToCentroid float local ${Target.HeadingToLoc[}
+	/declare randomValue int local ${Math.Rand[3]}
 	
-	/declare desiredHeading float local ${Me.HeadingToLoc[${MobsCentroidY}, ${MobsCentroidX}].DegreesCCW}
-	/declare deltaFromDesiredHeading float local ${Math.Calc[${Math.Abs[${desiredHeading} - ${Me.Heading.DegreesCCW}]}]}
-
-	/if (${DebugMode}) /echo Mob centroid is at angle ${deltaFromDesiredHeading} - from ${Target.CleanName}
-
-	/declare angleToTankingPosition float local
-	
-	/if (${deltaFromDesiredHeading} >= 180) {
-		/varcalc angleToTankingPosition ${deltaFromDesiredHeading} - 180
+	/if (!${needToMove}) {
+		/varset MoveTimer 30
 	} else {
-		/varcalc angleToTankingPosition ${deltaFromDesiredHeading} + 180
-	}
+		/if (${MoveTimer} == 0) {
+			/if (${DebugMode}) /echo need to move
+			/varset MoveTimer 30
+			/call FaceAECentroid					
+			/delay 4
+						
+			/if (${TankId} == ${Me.ID} && ${Me.XTarget[2].ID}) {
+				/if (${randomValue} == 0) {
+					/if (${DebugMode}) /echo rand movement backwards
+					/keypress s
+					/keypress s
+				} else /if (${randomValue} == 1) {
+					/if (${DebugMode}) /echo rand movement strafe right
+					/if (${Stick.Active}) {
+						/stick off
+						/if (${DebugMode}) /echo stick off 5
+					}
+					/keypress e hold
+					/delay 4
+					/keypress e
+					/call FaceAECentroid
+					/keypress e
+					/delay 2
+					/keypress e
+				} else {
+					/if (${DebugMode}) /echo rand movement strafe left
+					/if (${Stick.Active}) {
+						/stick off
+						/if (${DebugMode}) /echo stick off 5
+					}
+					/keypress q hold
+					/delay 4
+					/keypress q
+					/call FaceAECentroid
+					/keypress q
+					/delay 2
+					/keypress q
 
-	/declare tankingY float local ${Math.Sin[${angleToTankingPosition}]} * 10;
-	/declare tankingX float local ${Math.Cos[${angleToTankingPosition}]} * 10;
+				
+				
+					|/echo fallthrough needToMove AE centroid movement			
+					|/keypress s hold
+					|/delay 2
+					|/keypress s		
+					|/delay 2
+					|/keypress e hold
+					|/delay 3
+					|/keypress e
+				}
+
+				/call FaceAECentroid
+			
+				/delay 2
+				/return FALSE
+			} else {
+				/if (${InCombatStickToCommander}) {
+					/if (${BOTMode} !=2 && ${BOTMode} !=4) {
+						/if (!${Stick.Active}) {
+							/if (${DebugMode}) /echo SetStickTarget 7
+							/call SetStickTarget ${RKCommanderId} 5
+							/if (${DebugMode}) /echo facing target 2
+							/face fast nolook
+						}
+					}
+				}
+			}
+		}
+	}
 	
-	/echo pre adjustment Y = ${tankingY} pre adjust X = ${tankingX}
+	/if (${Target.Distance} > ${StickDistance}) {
+		/if (${DebugMode}) /echo SetStickTarget 5 
+		/call SetStickTarget ${Target.ID} ${StickDistance}
+	}
 	
-	/varcalc tankingY ${Target.Y} + ${tankingY}
-	/varcalc tankingX ${Target.X} + ${tankingX}	
-	
-	/squelch /stick off
-	/squelch /moveto loc ${tankingY} ${tankingX}
-	/delay 2s
-	|/face fast nolook
-	
-	/if (${DebugMode}) /echo moving to location X: ${tankingX} Y: ${tankingY}
 /return FALSE
 
 
@@ -85,15 +144,16 @@ Sub CalculateMobsCentroid
 	/declare analyzedTargetCount int local 0
 
 	/for i 1 to ${Me.XTarget}
-		/if (${Spawn[id ${Me.XTarget[${i}].ID}].Distance} <= ${MaxTargetDistance}) {
-		
-			/varcalc cumulativeX ${cumulativeX} + ${Spawn[id ${Me.XTarget[${i}].ID}].X}
-			/varcalc cumulativeY ${cumulativeY} + ${Spawn[id ${Me.XTarget[${i}].ID}].Y}			
-	
+		/if (${Me.XTarget[${i}].Type.Equal[NPC]}) {
+			/if (${Spawn[id ${Me.XTarget[${i}].ID}].Distance} <= ${MaxTargetDistance}) {
+				/varcalc cumulativeX ${cumulativeX} + ${Spawn[id ${Me.XTarget[${i}].ID}].X}
+				/varcalc cumulativeY ${cumulativeY} + ${Spawn[id ${Me.XTarget[${i}].ID}].Y}			
+			}
+			/varcalc analyzedTargetCount ${analyzedTargetCount} + 1
 		}
-		/varcalc analyzedTargetCount ${analyzedTargetCount} + 1
 	/next i
 	
+	/varcalc MobsCentroidX ${cumulativeX} / ${analyzedTargetCount}
 	/varcalc MobsCentroidX ${cumulativeX} / ${analyzedTargetCount}
 	/varcalc MobsCentroidY ${cumulativeY} / ${analyzedTargetCount}	
 /return FALSE
@@ -110,13 +170,6 @@ Sub AmIFacingTarget(int targetId, int tolerance)
 	
 	/if (${BOTMode} != 5 && ${Math.Abs[${deltaFromDesiredHeading}]} > ${tolerance}) {
 		/if (${DebugMode}) /echo ${targetId} isn't infront of me, my angle is off by ${deltaFromDesiredHeading}
-		
-		/if (${deltaFromDesiredHeading} > 0) {
-			/varset SideStepRight TRUE
-		} else {
-			/varset SideStepRight FALSE
-		}
-		
 		/return FALSE
 	}
 /return TRUE
@@ -151,7 +204,7 @@ Sub IsTargetFlankingMe(int targetId)
 /return TRUE
 
 Sub AreTargetsFacingMe
-	/if (${Me.XTarget} == 0) /return TRUE
+	/if (!${Me.XTarget[1].ID}) /return TRUE
 	/declare i int local
 	/for i 1 to ${Me.XTarget}
 		/call IsTargetFacingMe ${Me.XTarget[${i}].ID}
@@ -160,11 +213,13 @@ Sub AreTargetsFacingMe
 /return TRUE
 
 Sub AreTargetsFacingPet
-	/if (${Me.XTarget} == 0) /return TRUE
+	/if (!${Me.XTarget[1].ID}) /return TRUE
 	/declare i int local
 	/for i 1 to ${Me.XTarget}
-		/call IsTargetFacingPet ${Me.XTarget[${i}].ID}
-		/if (!${Macro.Return}) /return FALSE
+		/if (${Me.XTarget[${i}].Type.Equal[NPC]}) {
+			/call IsTargetFacingPet ${Me.XTarget[${i}].ID}
+			/if (!${Macro.Return}) /return FALSE
+		}
 	/next i
 /return TRUE
 
@@ -188,83 +243,77 @@ Sub IsTargetFacingMe(int targetId)
 
 
 Sub SetStickTarget(int targetId, int distance)
-	/if (${DebugMode}) /echo SetStickTarget
+	/if (${DebugMode}) /echo SetStickTarget ${targetId} ${distance}
 	/if (${targetId} == 0) /return FALSE
-	/if (${DebugMode}) /echo setting stick target - CurrentID = ${CurrentStickTargetId} - new ID = ${targetId}
+	/if (${Spawn[id ${targetId}].Distance} <= ${distance}) /return FALSE
 
+	/if (${DebugMode}) /echo setting stick target - CurrentID = ${CurrentStickTargetId} - new ID = ${targetId} - distance = ${distance}
+	
+	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE	
+	
 	/if (${CurrentStickTargetId} == ${targetId}) {
-		/if (${StickTimer} != 0) /return FALSE
-		/varset StickTimer 50
-
-		/if (!${Stick.Active}) /squelch /stick id ${targetId} ${StickFlags} ${distance} 
+		/if (${StickTimer} > 0) /return FALSE
+		/if (${DebugMode}) /echo Timer elapsed - set stick to ${targetId}
+		/varset StickTimer 10
+		/if (!${Stick.Active}) /stick id ${targetId} ${distance} ${StickFlags} 
 		/return FALSE
 	}
-		
-	/stick off
-	/delay 2
-	/keypress s
-	/delay 2
 	
-	/if (!${Bool[${distance}]} || ${distance} == 0) /varset distance ${StickDistance}
-
 	/varset CurrentStickTargetId ${targetId}
+	/if (${Stick.Active}) /stick off
+	/stick id ${targetId} ${StickFlags} ${distance}
+	/echo stuck to ${targetId}
 	
+	/if (!${Bool[${distance}]} || ${distance} == 0) /varset distance 15
 
 	/if (${Spawn[id ${targetId}].Type.Equal[NPC]}) {
-		/if (${DebugMode}) /echo stick id ${targetId} ${StickFlags} ${distance}
-		/squelch /stick id ${targetId} ${StickFlags} ${distance}
+		/echo sticking to ${targetId} ${Spawn[id ${targetId}].CleanName} at distance ${distance} with flags ${StickFlags}
+		/stick id ${targetId} ${StickFlags} ${distance}
 	} else {
-		/squelch /stick id ${targetId} ${distance}
+		/echo sticking to ${targetId} ${Spawn[id ${targetId}].CleanName} at distance ${distance}
+		/stick id ${targetId} ${distance}
 	}	
 /return FALSE
 
 Sub CheckCommanderFollow
-	/if (${DebugMode}) /echo CheckCommanderFollow
-	/if (${Spawn[${RKCommander} pc].ID} == ${Me.ID}) /return FALSE
-	/if (${BOTMode} == 1 || ${BOTMode} == 3) {
-		/if (${Me.XTarget} > 0) {
-		
-			/if (!${InCombatStickToCommander} && ${Stick.Active}) {
-				/if (${CurrentStickTargetId} == ${Group.Leader.ID}) {
-					/echo InCombatStickToCommander = true, dropping stick to commander
-					/stick off
-				}
-			}
-			
-		}
-		
-		/if (${Me.XTarget} == 0) {
-			/if (!${Stick.Active}) /echo sticking to Commander ${RKCommander}
-			/call SetStickTarget ${Spawn[${RKCommander} pc].ID} ${StickDistance}
-		}
+	/if (${DebugMode}) /echo CheckCommanderFollow - BOTMode = ${BOTMode} | Commander = ${RKCommander} | XTarget = ${Me.XTarget}
+	/if (${RKCommanderId} == ${Me.ID}) /return FALSE
+	/if (${BOTMode} == 2 || ${BOTMode} == 4) /return FALSE
 
-		/if (${Me.XTarget} > 0 && ${InCombatStickToCommander}) {
+	/if (${BOTMode} == 1) {
+		/if (${DebugMode}) /echo SetStickTarget 4 - invis commander follow
+		/call SetStickTarget ${RKCommanderId} 5
+		/return FALSE
+	}
+	
+	/if (${Bool[${Me.XTarget[1].ID}]}) {
+		/if (${InCombatStickToCommander} || ${Spawn[id ${TankId}].Distance} > 30) {
 			/if (!${Stick.Active}) {
-				/if (${DebugMode}) /echo sticking to Commander ${RKCommander}
-				/call SetStickTarget ${Spawn[${RKCommander} pc].ID} ${StickDistance}
+				/if (${DebugMode}) /echo SetStickTarget 2
+				/call SetStickTarget ${RKCommanderId} 5
+			}
+		} else {
+			/if (${Stick.Active} && ${CurrentStickTargetId} == ${RKCommanderId}) {
+				/stick off 
+				/if (${DebugMode}) /echo stick off 8
 			}
 		}
-
-		/if (${Spawn[${RKCommander}].Distance} < 20) {
-			/if (${Spawn[${RKCommander}].Z} < (${Me.Z} - 5)) {
-				/if (!${Descending}) {
-					/if (${DebugMode}) /echo Commander: ${Spawn[${RKCommander}].Z} < me: ${Me.Z} - Descending
-					|/keypress end hold
-					/varset Descending TRUE
-				}
-			} else {
-				/if (${Descending}) {
-					|/keypress end
-					/varset Descending FALSE
-				}
-			}
+		/return FALSE
+	}
+	
+	/if (${BOTMode} == 1 || ${BOTMode} == 3) {
+		/if (!${Stick.Active} && ${Spawn[id ${RKCommanderId}].Distance} > 10) {
+			/if (${DebugMode}) /echo SetStickTarget 3
+			/call SetStickTarget ${RKCommanderId} 5
 		}
 	}
 /return FALSE
 
 Sub ClearStickTarget
-	/if (${DebugMode}) /echo ClearStickTarget
+	|/if (${DebugMode}) 
+	/echo ClearStickTarget
 	/if (${CurrentStickTargetId} != 0) /varset CurrentStickTargetId 0
 	/if (${CurrentStickTargetId} == 0 && !${Stick.Active}) /return TRUE
-	/squelch /stick off
+	/stick off
+	/if (${DebugMode}) /echo stick off 9
 /return TRUE

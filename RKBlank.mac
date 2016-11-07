@@ -8,7 +8,7 @@ Sub Main
 | *** VARIABLE DECLARATIONS
 
 	/varset MaxTargetDistance 5000
-	/varset TargetHpEngagePercentage 100
+
 	/varset UpperAggroThreshold 100
 	/varset MercBurnThreshold 100
 	
@@ -17,7 +17,7 @@ Sub Main
 	/call AddToArray "CombatAbilities" "Slam"
 	/call AddToArray "CombatAbilities" "Disarm"
 
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "CheckAura"
+	/call AddToArray "PreTargetAcquisitionSubs" "CheckAura"
 	/call AddToArray "CombatActionSubs" "WarriorCombat"
 	
 	/echo Done initializing macro!
@@ -35,7 +35,7 @@ Sub CheckAura
 	/if (!${Bool[${Me.Aura[Myrmidon's Aura]}]}) {
 		/echo Applying aura
 		/call RKDisc "Myrmidon's Aura"
-		/delay 10s ${Bool[${Me.Aura[Myrmidon's Aura]}]}
+		/delay 4s ${Bool[${Me.Aura[Myrmidon's Aura]}]}
 		/return TRUE
 	}
 /return FALSE

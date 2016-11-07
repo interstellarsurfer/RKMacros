@@ -13,8 +13,10 @@ Sub Main
 
 | *** VARIABLE DECLARATIONS
 
-	/varset TargetHpEngagePercentage 98
+	/varset TargetHpEngagePercentage 99
 	/varset UpperAggroThreshold 80
+	
+	/varset ShouldBroadcastMed FALSE
 	
 	/varset SpellMemSlot 11
 	
@@ -22,6 +24,7 @@ Sub Main
 	
 	/varset MercBurnThreshold 101
 
+	/varset ShouldBroadcaseMed FALSE
 	/varset InCombatStickToCommander TRUE
 
 	/call AddToArray "InvisModeSubs" "GroupInvis"
@@ -31,13 +34,13 @@ Sub Main
 	/call AddToArray "DefensiveActionSubs" "WizardDefensiveActions"		
 	/call AddToArray "NonCombatSubs" "WizardNonCombatSubs"
 
-
+	/call AddToArray "DetrimentalSpells" "Power Vortex Rk. II"
 	/call AddToArray "DetrimentalSpells" "Flame Vortex Rk. II"				
-	/call AddToArray "DetrimentalSpells" "Ethereal Inferno"
-	/call AddToArray "DetrimentalSpells" "Flashblaze"
+	/call AddToArray "DetrimentalSpells" "Ethereal Frost Rk. II"
+	/call AddToArray "DetrimentalSpells" "Frost Snap Rk. II"
 	/call AddToArray "DetrimentalSpells" "Wildspark Barrage Rk. II"		
-	/call AddToArray "DetrimentalSpells" "Cloudburst Storm Rk. II"
-
+	/call AddToArray "DetrimentalSpells" "Ethereal Inferno Rk. II"
+	/call AddToArray "DetrimentalSpells" "Ethereal Barrage Rk. II"
 	
 
 	/call AddToArray "NonCombatSelfBuffs" "Shield of Dreams Rk. II"	
@@ -65,7 +68,7 @@ Sub WizardBurnActions
 Sub WizardCombatActions
 	|/if (!${Me.Pet.ID}) /call RKCast "Daveron's Pyroblade"
 
-	/if (${Me.XTarget} > 1) {
+	/if (${Bool[${Me.XTarget[1].ID}]}) {
 		/call RKCast "Glacial Pillar Rk. II" ${CurrentTargetId}
 		/if (${Macro.Return}) /return TRUE
 	}
@@ -94,6 +97,10 @@ Sub WizardCombatActions
 	
 	/if (!${Bool[${Target.Snared}]}) /call RKAACast "Atol's Shackles" ${CurrentTargetId}
 	
+	/if (${Me.PctMana} < 50) {
+		/call RKCast "Soothing Harvest Rk. II" ${CurrentTargetId}
+		/call RKAACast "Harvest of Druzzil" ${CurrentTargetId}
+	}	
 	
 /return FALSE
 
@@ -103,9 +110,9 @@ Sub WizardDefensiveActions
 
 Sub WizardNonCombatSubs
 
-	/if (!${Me.Buff[${Me.AltAbility[Pyromancy].Spell.Name}].ID}) {
-		/call RKAACast "Pyromancy" ${CurrentTargetId}	
-		/echo Need pyromancy
+	/if (!${Me.Buff[${Me.AltAbility[Cryomancy].Spell.Name}].ID}) {
+		/call RKAACast "Cryomancy" ${CurrentTargetId}	
+		/echo Need cryomancy
 	}
 
 	/if (${Me.PctMana} < 70) {

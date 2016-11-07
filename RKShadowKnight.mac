@@ -17,7 +17,7 @@ Sub Main
 	/varset PullMode TRUE
 	
 	/varset KeepAgroOnAdds FALSE
-	/varset TargetHpEngagePercentage 100
+
 	/varset UpperAggroThreshold 101
 	/varset MercBurnThreshold 101
 
@@ -81,7 +81,7 @@ Sub ExecuteBurnShadowKnightCombatActions
 /return FALSE
 
 Sub SKCombatActions
-	/if (${Me.Casting.ID}) /return FALSE
+	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
 
 	/doability 1
 	/doability 2
@@ -136,10 +136,9 @@ Sub SKDefensives
 	/if (${Me.Buff[Harmshield].ID}) /return FALSE
 
 	/if (${Me.PctHPs} < 20) /call RKDisc "Deflection Discipline"	
-	/if (${Bool[${Me.ActiveDisc}]} && ${${Me.ActiveDisc}.Equal[Deflection Discipline]}) /return FALSE
+	/if (${Bool[${Me.ActiveDisc}]} && ${Me.ActiveDisc.Name.Equal[Deflection Discipline]}) /return FALSE
 	
 	/if (${Me.PctHPs} < 60) /call RKDisc "Recondite Mantle RK. II"
-
 	/if (${Me.PctHPs} < 80) /call RKDisc "Sholothian Carapace RK. II"
 	
 /return FALSE

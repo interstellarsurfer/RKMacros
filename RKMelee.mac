@@ -1,0 +1,38 @@
+#include RKBase.inc
+#include RKMeleeBase.inc
+
+Sub Main
+	/call Init_RKBase
+	/call Init_RKMeleeBase
+
+| *** VARIABLE DECLARATIONS
+
+	/varset MaxTargetDistance 5000
+
+	/varset UpperAggroThreshold 100
+	/varset MercBurnThreshold 80
+	
+	/call AddToArray "CombatAbilities" "Kick"	
+	/call AddToArray "CombatAbilities" "Slam"
+	/call AddToArray "CombatAbilities" "Disarm"
+
+	/call AddToArray "PreTargetAcquisitionSubs" "PreTarget"
+	/call AddToArray "CombatActionSubs" "MeleeCombat"
+	
+	/echo Done initializing macro!
+
+| *** INITIALIZATION
+	/echo Starting Box Commander - Melee Macro
+
+| *** MAIN LOOP
+:loop
+	/call Tick
+	/goto :loop
+/return
+
+Sub PreTarget
+/return FALSE
+
+Sub MeleeCombat
+
+/return FALSE

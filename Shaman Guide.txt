@@ -1,0 +1,230 @@
+
+
+Each healer in EQ is unique, but Shaman are especially distinct from both Clerics and Druids.  
+
+
+Our most powerful tools are Melee ADPS and AE heals.
+
+#1 Deal with event mechanics.
+If you need to move, move.  If you need to cure, cure.  
+If the tank dies, the raid will suffer; if mechanics aren't followed, the encounter will fail.
+
+#2 Deal with huge tank spikes.
+If I die, the impact to my group is huge.  If the tank dies, the impact to the raid is huge.
+I can get up and back into the fight in seconds with a rez, but when the tank dies it generally starts a cascade of suck.
+
+#3 Keep myself alive.
+After the main tank, I'm the most important person in my world.  Deal with it :)
+
+#4 Keep offtanks alive.
+Now, we deviate from accepted dogma.
+Our raids are stacked with great players. Period.  Sometimes we play like shit, but everyone has the ability for greatness.
+Our clerics and other healers do a wonderful job of keeping the main tank up.  Most of my heals thrown into the tank hit for zero or small amounts (because other healers and I are constantly casting).
+
+In high raid damage encounters or events with non trivial adds, the offtanks take a ton of damage.
+Because our healers do such a great job on the main tank, it frees me up to help keep offtanks up.
+I move between the top 2-4 of main tank parses to the bottom depending on the event.  99% of the time, this is because I'm spam healing the other 8-9 tanks I have on XTarget.
+My numbers on offtanks are always very high; I'm usually #1 or #2, switching back and forth with their group healer.
+
+I feel this deviation from standard healing priorities helps our raid much more than throwing heals blindly into the MT.
+That said, every single time the MT takes a spike, or there's no offtanks who need heals, my casts gets blown into the MT.
+
+Extended Target Window 
+/xt 1 through /xt 12
+
+Fill your XTarget window with tanks.  I fill from the bottom up with every single tank in the raid.
+
+Warrior Macro
+/xtarget set 12 Nobueno
+/xtarget set 11 Solomojo
+/xtarget set 10 Fllint
+/xtarget set 9 Drepex
+/xtarget set 8 Nekania
+/xtarget set 7 Rokab
+
+SK / Pally Macro
+/xtarget set 6 Mallakhi
+/xtarget set 5 Wuddane
+/xtarget set 4 Cerealkiller
+/xtarget set 3 Ohdin
+/xtarget set 2 Brackson
+/xtarget set 1 Warpeace
+
+There will not be 12 tanks in raid.
+
+Compress your XTarget window by filling empty slots in the tank block at the bottom to avoid mobs showing up there.  You'll end up with 2-3 empty slots at the top instead of 1.
+We usually raid with 3-5 warriors, 2-3 SKs, and 3-4 Pallies.  You'll have 2-3 empty slots for mobs.  Only once have I had 1 slot free.  Keep in mind that the macros above won't be sufficient.  Our tanks change a little based on who shows.  Make sure every tank is in XTarget.
+
+#5 Keep my group alive.
+About 1/3rd to 1/2 of my heals go towards my group.  You're a melee healer.  Melee takes a LOT of damage.  
+You're going to spend a lot of time deciding whether a melee or tank gets a critical heal.  Tanks have several healers; your group has one - you.  You have to make a judgement call on whether a tank REALLY needs your heal, or if you're going to save a group member.
+
+Some group members are more important to heal than others.  I keep a subtle priority based on how much a death screws someone over:  
+Ranger - rangers are worthless without mana.
+Bard - bard ADPS is usually better than rezzing one dps.
+Beast - beasts don't have huge mana problems, but when they die, their pet dies.  It takes a while to get back into the fight.
+Berserker - more dps than rogue.
+Rogue - more dps than monk.
+Monk - sorry buddy (but monks also tend to stay alive better).
+
+At the point where I'm making this kind of decision, I've already fucked up.  Try not to find yourself deciding between a tank and party member.  Keep your party topped off.
+Don't fuck up more by inaction - pick a person to heal and commit.
+
+#6 Blindly heal the MT.
+After everything else is taken care of.  Blindly throw heals into the MT.  Don't wait till it looks like he took damage. 
+Just. Keep. Casting.  
+HP updates are a few hundred milliseconds behind the server for everyone.  The odds of you being able to heal the MT reactively are very low.  Heal him proactively.  Offtanks and party members get reactive heals.
+
+
+
+
+Spells, Rotations, and Keybinds
+
+Krasir's Recourse
+Spiritual Swell
+Reckless Regeneration
+Reckless Restoration
+Reckless Remedy
+Krasir's Mending
+Shear of Renewal
+Talisman of Doomscale
+Blood of Rivans
+Roar of the Lion
+Sluggishness
+Ferocious Growth
+
+ALT+1
+Krasir's Recourse - Group wave heal with large upfront heal.
+
+Your goto group heal spell should be Krasir's Recourse.  It's a wave based heal which has a big hit initially, and then several ticks afterwards.  This, in combination with well placed Spiritual Swells should ensure you almost NEVER have to blow a single target heal on a party member.  Don't hesitate to single target heal party members when it's needed, but try to save your Reckless line for tank heals or emergencies.
+
+ALT+2
+Spiritual Swell - Your money spell.  It heals everyone around it, not just your group.  It's the single most powerful raidwide heal in the game, and it stacks with multiple shammies.
+
+That should be cast on cooldown every single time it's up.  Ensure it's targeted in such a way that it'll hit the maximum number of players.  DON'T cast this targeting the main tank.  It'll be centered around the wrong side of the mob.  
+If you can't target a melee in the gaggle, target the mob itself for Spiritual Swell; it'll hit everyone around it (decent radius too).
+
+Those are the only spells I really use ALT+Key for.
+
+Multicast Begins (I bind mine to F because I'm a WASD guy)
+
+F
+Reckless Regeneration - 105 quick heal.  1 sec cast, huge heal.
+F
+Reckless Restoration - 100 quick heal.  1 sec cast, pretty good heal.
+F
+Reckless Remedy - 95 quick heal.  1.8 sec cast, small heal, but moderately fast.
+F
+Krasir's Mending - 2.2 sec no cooldown heal.  Bigger than Remedy, tiny bit smaller than Restoration.  It's only 0.4 seconds slower than Remedy and when my other heals are on cooldown (often), it's a life saver when someone is dying.  If you're spamming the shit out of heals like you should be, you'll be casting this often.
+
+Multicast Ends
+
+On my hotbar with a Gina Timer.
+Shear of Renewal - group HoT.  Keep this rolling at all times.
+
+On my hotbar.
+Talisman of Doomscale - Every offtank is in my XTarget window - I see whenever one dies.  I ALWAYS rebuff them (and their group) with this.
+When rebuffing my party, often pets need buffs, people have been debuffed, multiple people have died, etc.  I just find it to be far superior to single target.
+
+Honestly, I just click this as needed.
+Blood of the Rivans - group cure.  Just don't use this when you can't do group cures and you're good.
+
+My mouse has extra buttons on the side.  I enjoy that because they're quick to reach.  YMMV.
+ALT+Mouse 3
+Roar of the Lion - Melee ADPS and HUGE group HOT.  Keep this rolling at all times.  The buff lasts longer than the CD on the spell (2 minutes vs 1).  You don't have to cast this on cooldown, but I tend to.
+
+***** SPECIAL NOTE: This spell will NOT hit your group if you have an NPC targetted.  
+***** SPECIAL NOTE: This spell will NOT hit your group if you have someone OUTSIDE your group targeted.
+***** SPECIAL NOTE: Before casting this, target yourself or a party member.
+
+ALT+Mouse 4
+Sluggishness - Defensive proc which slows enemies and heals the bearer.  
+Keep this up on all tanks.  
+
+ESPECIALLY offtanks.  
+ESPECIALLY offtanks.  
+
+They tend to deal with AE tanking MUCH more frequently, where Sluggishness and druid's Reptile shine.
+
+ALT+Middle Mouse
+Ferocious Growth - 16k HP buff.  This should be kept up on main tanks in the rotation and/or any AE tanks which are assigned to handle large swarms.  
+I tend to cast this on offtanks more than maintanks.  The maintank generally has one at the beginning of the fight.  This should be REBUFFED throughout the fight.  Keep it on cooldown.
+
+
+AAs
+
+Single Target Debuffs
+Malosinete - decreases target's Cold, fire, magic, and poison resists by 150.  Cast first on every named mob / significant target.
+Turgur's Swarm - cast second on every mob / significant target
+Crippling Spirit - cast on every named mob.  4 min CD, 7.5 min duration.  You can keep this up on two targets 90% of the time.
+
+Area of Effect Debuffs
+Wind of Malosinete - instant cast AE malo.  I cast this on every pack of adds.  In fights with adds, I use this ability nearly on cooldown.
+Tigir's Swarm - AE slow.  I cast this on every pack of adds.  It has a cast time, so make sure you follow your priorities.
+Crippling Apparition - AE cripple.  7 minute cooldown.  Use this on large packs of adds.
+
+Heals
+Spiritual Blessing - guranteed crit with heals for 12 seconds every 20 minutes.  This is one of your "oh shit" buttons.  Using it proactively is amazing, and can really  help the raid, but it's also a great way to recover from huge AE damage.
+Fleeting Spirit - double's the effectiveness of your next 20 heals or DoTs every 20 minutes.  This is 
+Call of the Ancients - stationary ward which pulses heals around it, usable once every 20 minutes.  I drop this when I'm expecting raid wide damage.  The long CD and rather limited effect makes this a situational ability, which can help out, but really won't turn the tide of any battle.  Every little bit helps.
+Spirit Guardian - heals the target for 120k over 24 secs if their HP drops below 50% within 5 minutes, every 5 minutes.  This is a great ability to hit an offtank with which isn't being pounded with constant heals.
+Union of Spirits - increases the Target's STR/AGI/DEX caps by 280 and increases HoT heals by 27k per tick, for 18 seconds, once every 10 minutes.  Hit tanks or offtanks with this before they're expecting a large amounts of incoming adds.  Hitting the "new" maintank with this immediately after a tank swap is a great way to ensure a smooth transition while healers adjust.
+Glyph of Courage - increases healing crit chance by 15% for 1.5 minutes every 10 minutes.  I hit this at the beginning of an event, and it usually comes up near the end again.  I could probably improve my timing of this ability.
+
+Cures
+Radiant Cure - cure's your group of disease and curse counters once a minute.  This also has a high chance of removing a detrimental effect, similar to pally splash.  Some events ABSOLUTELY CAN NOT be group cured.  Lady of Life is an example where you can't usually cure your whole group at once.  The exception to this is when 4+ of my group members get huge dots at the same time.  I'll eat the mana drain in order to save most of my group.  Canni and Spiritual Channeling can save your ass after this.
+Purified Spirits - self only disease, curse, and minor corruption cure every 2 minutes.  This has the same detrimental cure chance as radiant cure.  This is a life saver.  I try to save it for when both I and my group have debuffs, but I can't group cure.  Because of this, my instant self cure generally saves others more than myself.
+
+Personal Survivability
+Preincarnation - chance to avoid dying to an attack that will kill you for 30 minutes.  Cast this before every encounter if it's fallen off.
+Armor of Ancestral Spirits - personal AC boost.  It increases you AC softcap by 25% and increases your actual AC by 168.  That's HUGE, and makes you pretty burly for 5 minutes every 20.
+Ancestral Guard - absorbs 50% of spell damage and dot damage up to 60k.  This lasts for 2 minutes every 15, but if you're taking AEs, this'll burn out much faster.
+Silent Casting - reduces the hate generated by spells by 85% for 1 minute every 9.  I use this when we're expecting adds incoming.  Shaman AE heals tend to draw a lot of unwanted agro.
+
+DPS
+Third Spire - increases group proc chance by 25%, accuracy by 60%, and skill minimum damage modifier by 45% for 1.5 mins every 7.5 minutes.
+Spirit Call - puppy swarm.  Don't use this in a raid - it does insignificant damage, and just causes more lag.  That said, sicking puppies on an add can give you a second to get away.
+Rabid Bear - in addition to making your melee damage significantly higher for 5 minutes, rabid bear also increases the size of each HOT tick by 2100.  That's a huge survivability boost for 5 minutes every 12.
+Ancestral Aid - increases STR/AGI/DEX caps by 310 and increases HoT heals by 2k per tick, once every 10 minutes.  This ability can, and should be MGB'd.  This doesn't stack with Union of Spirits.
+
+Spell Resistance Penetration
+Dampen Resistance - decreases the chance that your spells will be resisted by 50% for 52 secs, every 10 minutes.  I use this when expecting notable packs of adds, because I want Wind of Malosinete, and Tirig's Swarm to land on the first try.
+Focus of Arcanum - decreases the chance that your spells will be resisted by 1-50% for 5 minutes, every 10 minutes.  I use this right before pulls.  It usually becomes available again towards the end of the fight.
+
+Knockbacks & Roots
+Spiritual Rebuke - knocks back an enemy quite far.  Unless they decide to add shamans to a punt rotation (VERY UNLIKELY), you'll never use this in a raid, but it, and all other punts/roots could save you from adds.
+Virulent Paralysis - single target knockback & root every 30 seconds. No need to cast in a raid ever.
+Paralytic Spores - single target knockback & root once per minute. No need to cast in a raid ever.
+Paralytic Spray - conal AE knockback & root of up to 8 targets, once per minute. No need to cast in a raid ever.
+
+Utility
+Call of the Wild - battle rez.  This will give anyone a 0% rez while in combat every 2 minute.  If my bard is dead, he's #1 priority, followed by highest DPS.
+Inconspicuous Totem - drops agro from you, and puts you in stasis until you click off the SPELL component to Inconspicuous Totem.  If I have a pack of adds on me because of AE heals, I'll hit this if I don't die instantly.
+Spirit of Urgency - summons a pet which AE taunts, then wipes every mob's agro list once it dies.  The agro wipe WILL make people die.  I NEVER use this on raids, unless I'm all by myself for some reason (already fucked up) and some random add attacks me.
+Tranquil Blessing - this is the out of combat MGB.  You can click this before a pull, then use it MUCH later for Ancestral Aid.  It'll ensure MGB is available for Unity should a number of people die.
+Mass Group Buff - buffs everyone around you with the next group BUFF you cast.  None of your heals eat this counter.  I try to save this for Unity after a number of people die, but proactively it can be used for Ancestral Aid to hit the entire raid.
+Spiritual Rebuke - single target punt every 6 seconds.  You should never have to use this on raid, but it can save you from a random add.
+Spirit Leap - jump forward about 100 feet every 20 seconds.  This is a great ability to get out of dodge if adds are coming or you're reacting to an emote too slowly.
+
+Buffs
+Communion of the Cheetah - run speed buff.  Faster than anything other than bard speed / mounts.  This is instant cast, and lasts for 2 minutes.  I keep this on my group at all times.  If they have bardspeed, great.  If not, they're still hauling ass.
+Spirit Walk - self only invis and minor runspeed buff.  I don't even have this on my bar.
+Group Spirit Walk - group version of Spirit Walk.  I don't even have this on my bar.
+Group Pact of the Wolf - 75% haste and 2500 HP/Mana buff.  This is instant cast and lasts for 20 minutes.  This will get a melee back up to 217/225% haste immediately after a rez.  The illusion component needs to be blocked.  This is in the song window named "Group Pact of the Wolf Form".  I keep this up on my group, and as many other groups as I can.
+Group Perfected Levitation - group lev.  Keep this on at all times, unless specifically asked to drop lev.
+Group Shrink - group shrink... you should ensure your group is always shrunk in raids, unless there's some jacked up terrain which makes it hard for melee to reach targets.
+Shrink - single target shrink, castable outside of the group.  Anyone who doesn't have Group Pact of the Wolf Form blocked will turn into a huge warewolf.  Shrink them.
+
+Pet AAs
+Companion's Aegis - pet only 12 hit / 36k rune once every 30 seconds.
+Companion's Blessing - Melee absorbtion boost, with heals for 1 minute every 12 minutes.  
+Companion's Divine Aura - Pet invulnerability and minor heal for 18 seconds every 10 minutes.
+Companion's Relocation - Scoots your pet forward a few feet in the direction you're facing.  This used to be much more important with pet push.  It's rarely used anymore, but the riposte changes could make this a useful skill to use again.
+
+Mana
+Cannibalization - returns mana in exchange for HP.  Cast this either right after an AE hits and your group is topped off, or when you're not expecting any AE damage.  An AE immediately after a Canni CAN and WILL kill you.
+Spiritual Channeling - spell costs are taken from HP instead of mana for 3 minutes every 20.  I use this ability after a death when Canni isn't available, or if I'm expecting to be low on mana late in a fight.  If I can, I use this early when Canni won't max my mana.
+
+
+
+

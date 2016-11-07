@@ -5,75 +5,117 @@
 #include RKPositioning.inc
 
 Sub Init_RKBase
+	/keypress F12
+	/keypress Num_5
+
 	/declare RKCommander string outer ${Group.Leader.Name}
-	/if (!${Bool[${RKCommander}]}) /varset RKCommander ${Me.Name}
-	/declare TankId int outer ${Group.MainTank.ID}
+	/declare OverrideCommander bool outer TRUE
+	/if (${OverrideCommander}) {
+		/if (!${Group.Leader.Name.Equal[Underbyte]} && !${Group.Leader.Name.Equal[Nerdbait]} && !${Group.Leader.Name.Equal[Terranigma]}) {
+			/if (${Spawn[pc Bumsnacker].ID}) /varset RKCommander Bumsnacker
+			/if (!${Bool[${RKCommander}]}) /varset RKCommander ${Me.Name}
+		}
+	}
+	/declare RKCommanderId int outer ${Spawn[pc ${RKCommander}].ID}
+
+	/if (${RKCommanderId} == ${Me.ID}) {
+		/afk off
+	} else {
+		/afk I'm on ${RKCommander}
+	}
 	
+	/declare TankId int outer ${Group.MainTank.ID}
+	/declare IsTank bool outer ${If[${TankId} == ${Me.ID},TRUE,FALSE]}
 	/declare memberIndex int outer 0
-	/for memberIndex 0 to ${Group.Members}
-		/if (!${Group.MainTank.ID}) {
-			/if (${Group.Member[${memberIndex}].Class.Name.Equal[Warrior]} || ${Group.Member[${memberIndex}].Class.Name.Equal[Paladin]} && ${Group.Member[${memberIndex}].Class.Name.Equal[Shadow Knight]}) {
+	/if (!${Group.MainTank.ID}) {
+		/for memberIndex 0 to ${Group.Members}
+			/if (${Group.Member[${memberIndex}].Class.Name.Equal[Warrior]} || ${Group.Member[${memberIndex}].Class.Name.Equal[Paladin]} || ${Group.Member[${memberIndex}].Class.Name.Equal[Shadow Knight]}) {
 				/varset TankId ${Group.Member[${memberIndex}].ID}
 			}
-		}
-	/next memberIndex
+		/next memberIndex
+	}
 	
-	/i quit	
+	/if (${TankId} == 0) /varset TankId ${Me.ID}
+
+	/if (!${Bool[${TankId}]} && ${Spawn[Underbyte pc].ID}) /varset TankId ${Spawn[Underbyte pc].ID}
+
 	/makecamp off
+
+	/if (${IsTank}) {
+		/log on
+	} else {
+		/log off 
+	}
+	
+	|---------- SYSTEM ----------
+	/declare MacroPaused bool outer FALSE
+	/declare DebugMode bool outer FALSE
+	| 0 = nothing / medding, 1 = follow & prevent action, 2 = set up camp & prevent action, 3 = follow & attack, 4 = set up camp & attack, 5 = manual piloting
+	/declare BOTMode int outer 3
+	| 0 = nothing, 1 = standard, 2 = burn, 3 = burn2
+	/declare MOBMode int outer 1
+	/declare DefaultMOBMode int outer 1
+	/declare DynamicArraySize int outer 30
+	/declare EarlyEscapePreviousTick bool outer TRUE
+	/declare EarlyEscapePauseDuration int outer 0
+	/declare CcTargetsInRange int outer
 	
 	|---------- BEHAVIOR ----------
+	/declare GlyphMode bool outer FALSE
 	/declare InCombatStickToCommander bool outer TRUE
 	/declare HideCorpsesOnAttack bool outer TRUE
 	/declare SitBetweenCombat bool outer TRUE
 	/declare IsAutoSitting bool outer FALSE
 	/declare MarkMainTarget bool outer TRUE
-	/declare PullMode bool outer FALSE
-	/declare PullTargets[100] string outer
-	/declare LoSPullTargets[100] string outer
-	/declare LoSPullRadius int outer 150
-	/declare PriorityTargets[100] string outer	
-	/declare SideStepRight bool outer TRUE
-	/declare SaveNewPullTargets bool outer TRUE
-	
+
 	/declare Descending bool outer FALSE
 	
 	/declare MercBurnThreshold int outer 90
-	/declare UpperAggroThreshold int outer 80	
-	/declare TargetHpEngagePercentage int outer 99
-	/declare MaxTargetDistance int outer 5000
-	/declare MaxMeleeDistance int outer 13
+	/declare UpperAggroThreshold int outer 95
+	/declare TargetHpEngagePercentage int outer 200
+	/declare MaxTargetDistance int outer ${If[${IsTank}, 100, 400]}
+	/declare MaxMeleeDistance int outer 14
 	/declare StickTimer timer outer 10
-	/declare StickDistance string outer 9
-	/declare StickFlags string outer 
+	/declare StickDistance string outer 13
+	/declare StickFlags string outer
 	
+	/declare MoveTimer timer outer 20	
+	/declare FaceTimer timer outer 20		
+	
+	/declare ShouldBroadcastMed bool outer FALSE
 	/declare LowManaMed bool outer FALSE
-	/declare MeddingMessageTimer timer outer 10
+	/declare MeddingMessageTimer timer outer 10s
 	
 	/declare ForageMode bool outer FALSE
-
 	/declare KeepAgroOnAdds bool outer FALSE
+	
+	|---------- PULLING ----------
+	/declare PullMode bool outer FALSE
+	/declare SaveNewPullTargets bool outer FALSE
+	/declare PullTargets[100] string outer
+	/declare LoSPullTargets[100] string outer
+	/declare LoSPullRadius int outer 5000
+	/declare PriorityTargets[100] string outer	
+	/declare PullWithAutoFire bool outer FALSE
+	/declare PullTargetEvaluationId int outer 0 	
+	/declare PullTargetId int outer 0
+	/declare PullTargetDistance int outer 10000
+		
 	|---------- POSITION ----------
 	/declare MobsCentroidX float outer
 	/declare MobsCentroidY float outer
-	
-	|---------- SYSTEM ----------
-	/declare MacroPaused bool outer FALSE
-	/declare DebugMode bool outer FALSE
-	/declare BOTMode int outer 3 | 0 = nothing / medding, 1 = follow & prevent action, 2 = set up camp & prevent action, 3 = follow & attack, 4 = set up camp & attack, 5 = manual piloting
-	/declare MobMode int outer 1 | 0 = nothing, 1 = standard, 2 = burn, 3 = burn 2
-	/declare DynamicArraySize int outer 50
-	/declare EarlyEscapePreviousTick bool outer FALSE
-	/declare EarlyEscapePauseDuration int outer 0
+	/declare AECentroidX float outer
+	/declare AECentroidY float outer
 	
 	|---------- SYSTEM - COMMUNICATION ----------
-	/declare IrcConnectionString string outer irc.lavishsoft.com 6667 #${RKCommander}
-	/declare ChatCommand string outer i say
+	/declare IrcConnectionString string outer irc.lavishsoft.com 6667 #Underbyte 
+	|${RKCommander}
+	/declare ChatCommand string outer fs
 	/declare ChatChannelName string outer ${RKCommander}
 	
 	|---------- SYSTEM - TARGETING ----------
 	/declare CurrentTargetId int outer 0
 	/declare CurrentStickTargetId int outer 0	
-	/declare TargetSyncTimer timer outer 50
 	/declare BadTargetIds[100] int outer
 	
 	|---------- SYSTEM - LIFE CYCLE ----------
@@ -84,19 +126,21 @@ Sub Init_RKBase
 
 	/declare NonCombatSubs[${DynamicArraySize}] string outer
 	/call AddToArray "NonCombatSubs" "CheckSitting"
+	/call AddToArray "NonCombatSubs" "ForageAndBag"
 	/call AddToArray "NonCombatSubs" "CheckCommanderFollow"	
 	
-	/declare PreTargetAcquisitionCombatActionSubs[${DynamicArraySize}] string outer
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "CheckCommanderFollow"
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "ForageAndBag"
+	/declare PreTargetAcquisitionSubs[${DynamicArraySize}] string outer
+	/call AddToArray "PreTargetAcquisitionSubs" "CheckCommanderFollow"
 	
 	/declare CombatActionSubs[${DynamicArraySize}] string outer
 	/call AddToArray "CombatActionSubs" "CheckPosition"
 	/declare BurnCombatActionSubs[${DynamicArraySize}] string outer
 	/declare Burn2CombatActionSubs[${DynamicArraySize}] string outer	
 	/declare DefensiveActionSubs[${DynamicArraySize}] string outer	
-	/declare AssistCalledSubs[${DynamicArraySize}] string outer
 	/declare XPEarnedSubs[${DynamicArraySize}] string outer
+	
+	/declare OutOfCombatMessageTimer timer outer 1s	
+	/declare EngageOutOfCombatNPC bool outer FALSE
 	
 	|---------- PULLING ----------
 	/call Init_RKPullerBase
@@ -111,130 +155,275 @@ Sub Init_RKBase
 
 Sub Tick
 	/if (${DebugMode}) /echo ------------- BEGIN LOOP! -------------		
+	/if (${DebugMode}) /echo ------------- BEGIN LOOP! -------------		
+	/if (${DebugMode}) /echo ------------- BEGIN LOOP! -------------		
 	/if (!${ChatLanguageVerified}) /lang
-		
+	
 	/doevents
-	
-	/if (${EarlyEscapePreviousTick}) /delay ${EarlyEscapePauseDuration}
-	
-	/if (${MacroPaused} || ${Me.State.Equal[HOVER]}) /return FALSE
-	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return TRUE
+	/delay 1
 
-	/if (${Group.Leader.ID} && !${Group.Leader.Name.Equal[${RKCommander}]}) {
-		/echo Changing commander from ${RKCommander} to ${Group.Leader.Name}
-		/varset RKCommander ${Group.Leader.Name}
+	/if (${DebugMode}) /echo tick
+	
+	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
+	/if (!${Me.Class.Name.Equal[Bard]} && ${TankId} != ${Me.ID} && ${Me.Moving}) /return FALSE
+	/if (${Window[SpellBookWnd].Open}) /return FALSE
+	/if (${Bool[${Me.XTarget[1].ID}]} && !${Target.ID}) /target id ${CurrentTargetId}
+	/if (${EarlyEscapePreviousTick}) /delay ${EarlyEscapePauseDuration}
+	/if (${MacroPaused} || ${Me.State.Equal[HOVER]}) /return FALSE
+
+	/call CheckCommanderAndTank
+	
+	/if (${Zone.ShortName.Equal[GuildLobby]} && ${BOTMode} != 1) {
+		/echo You're in the Guild Lobby.  Bots are disabled unless BOTMode = 1 (Follow Invis)
+		/delay 5s
+		/return TRUE
 	}
 	
+	/if (${Spawn[id ${CurrentStickTargetId}].Type.Equal[Corpse]} || (${Target.ID} && ${Target.Type.Equal[PC]} && ${Me.XTarget[1].ID} && ${BOTMode} != 5)) {
+		/call ClearStickTarget
+		/target clear
+	}
+
+	/if (${DebugMode}) /echo tick 2
+	
+	/if (!${Bool[${CurrentTargetId}]}) /varset CurrentTargetId ${If[${Target.ID},${Target.ID},${Me.ID}]}
+	
+	/if (${SaveNewPullTargets} && ${Target.ID} && ${Target.PctHPs} < 90 &&  ${Target.Type.Equal[NPC]}) {
+		/call TrimName "${Target.CleanName}"
+		/declare trimmedName string local ${Macro.Return}
+		/call GetStringArrayIndex "LoSPullTargets" "${trimmedName}"
+		/if (!${Macro.Return}) {
+			|/echo Adding ${Target.CleanName} to pull targets
+			|/call AddToArray "PullTargets" "${trimmedName}"
+			/if (${DebugMode}) /echo Adding ${Target.CleanName} to LoS pull targets			
+			/call AddToArray "LoSPullTargets" "${trimmedName}"
+		}
+	}
+
+	|If I'm sticking to a Spawn that's not my target and the thing I'm sticking to is another NPC, I'm going to drop stick.
+	/if (${CurrentStickTargetId} && ${CurrentStickTargetId} != ${Target.ID} && ${Spawn[id ${CurrentStickTargetId}].Type.Equal[NPC]}) {
+		/if (${Stick.Active}) /multiline ; /stick off ; /echo stick off 2
+	}
+	
+	/if (${DebugMode}) /echo tick 3
+
+	/call UpdateMercenaryStance
+	/if (${DebugMode}) /echo mark - 4
+	/call EvaluateTargets
+	/if (${Macro.Return}) /return FALSE
+
+	/if (${DebugMode}) /echo tick 4	
+	
+	/call DoCombatRoutine
+	
+	/if (${DebugMode}) /echo mark - 7
+	/if (${Target.Type.Equal[PC]}) /target clear
+	
+	/if (${Macro.Return}) /return TRUE
+	
+	/if (${DebugMode}) /echo tick 5
+/return FALSE
+
+Sub ClearPullTarget
+	/if (${DebugMode}) /echo clearing pull target
+	/varset PullTargetId 0
+	/varset CurrentTargetId 0
+	/varset PullTargetDistance 10000
+	/target clear
+/return FALSE
+
+Sub EvaluateTargets
+	/if (${Bool[${Me.XTarget[1].ID}]}) {
+		/varset LowManaMed FALSE
+		/call EvaluateAETargets
+	} else {
+		/call DoOutOfCombatRoutine
+	
+		|/if (!${Target.ID} || ${Target.Type.Equal[PC]} || ${EngageOutOfCombatNPC} == FALSE) /return TRUE
+		| --- IF WE DON'T HAVE ANY MOBS ON XTarget ---
+		/if (${PullMode}) {
+			/if (!${Target.ID}) /return FALSE
+			/if (!${Target.Type.Equal[NPC]}) {
+				/if (${DebugMode}) /echo target isn't an NPC
+				/call ClearPullTarget
+			}
+			/if (${DebugMode}) /echo Pull mode engaged, engaging ${Target.CleanName}
+			/if (!${Stick.Active}) /call SetStickTarget ${Target.ID} 10
+			/if (${Target.Distance} > 40 && ${PullWithAutoFire} && !${Me.AutoFire}) {
+				/autofire
+			} else {
+				/if (${DebugMode}) /echo attacking ${Target.CleanName}
+				/attack on
+			} 
+
+			/if (${Target.Distance} < 40) {
+				/if (${Target.Z} < (${Me.Z} - 5)) {
+					/if (!${Descending}) {
+						/if (${DebugMode}) /echo target: ${Target.Z} < me: ${Me.Z} - Descending
+						/keypress end hold
+						/varset Descending TRUE
+					}
+				} else {
+					/if (${Descending}) {
+						/keypress end
+						/varset Descending FALSE
+					}
+				}
+			}	
+			
+			|/call CheckTargetDistance ${Target.ID}
+			/call RKAACast "Banestrike"
+		} else {
+			/if (!${Target.ID}) /return TRUE
+			/if (${Target.Type.Equal[PC]}) /return TRUE
+			/if (!${EngageOutOfCombatNPC}) /return TRUE
+			/if (${Target.PctHPs} == 100) {
+				/if (${OutOfCombatMessageTimer} == 0) {
+					/varset OutOfCombatMessageTimer 10
+					/if (${DebugMode}) /echo target's hp are 100%
+				}
+				/return TRUE
+			}
+			
+			|/if (${BOTMode} != 5 && !${Target.Type.Equal[NPC]} && !${Target.Type.Equal[Object]}) {
+			|	/if (${OutOfCombatMessageTimer} == 0) {
+			|		/varset OutOfCombatMessageTimer 10
+			|		/echo target isn't an NPC
+			|	}
+			|	/return TRUE
+			|}
+			
+			/if (!${EngageOutOfCombatNPC} && ${BOTMode} != 5) {
+				/if (${OutOfCombatMessageTimer} == 0) {
+					/varset OutOfCombatMessageTimer 10
+					/if (${DebugMode}) /echo EngageOutOfCombatNPC is FALSE
+				}
+				/return TRUE
+			}
+		}
+	}
+/return FALSE
+
+Sub CheckCommanderAndTank
 	/if (${Group.MainTank.ID} && ${Group.MainTank.ID} != ${TankId}) {
 		/echo Changing main tank from ${Spawn[id ${TankId}].Name} to ${Group.MainTank.Name}
 		/varset TankId ${Group.MainTank.ID}
 	}
-
-	|HACK: sometimes the pet and corpses report as an NPC for some reason, either that or delay (it's probably delay) is causing pets to not be cleared when targeted 
-	/if (${Target.Type.Equal[Pet]} || ${Target.Type.Equal[Corpse]}) /target clear
 	
-	/if (${CurrentTargetId} != ${Me.ID} && !${Spawn[id ${CurrentTargetId}].ID}) /varset CurrentTargetId ${Me.ID}
-	
-
-	/if (${SaveNewPullTargets} && ${Target.ID} && ${Target.PctHPs} < 90 &&  ${Target.Type.Equal[NPC]}) {
-		/call TrimName "${Target.CleanName}"
-		/declare trimmedName string local ${Macro.Return}
-		/call GetStringArrayIndex "PullTargets" "${trimmedName}"
-		/if (!${Macro.Return}) {
-			/echo Adding ${Target.CleanName} to pull targets
-			/call AddToArray "PullTargets" "${trimmedName}"
-			/echo Adding ${Target.CleanName} to LoS pull targets			
-			/call AddToArray "LoSPullTargets" "${trimmedName}"
-		}
+	/if (${Spawn[pc ${RKCommander}].ID} && ${Spawn[pc ${RKCommander}].ID} != ${RKCommanderId}) {
+		/varset RKCommanderId ${Spawn[pc ${RKCommander}].ID}
 	}
 	
-	
-	/if (${CurrentStickTargetId} && ${CurrentStickTargetId} != ${Target.ID} && ${Spawn[id ${CurrentStickTargetId}].Type.Equal[NPC]}) /squelch /stick off
-		
-	/call UpdateMercenaryStance
+	/if (${DebugMode}) /echo CheckCommanderAndTank 1
 
-	/if (!${Bool[${Me.XTarget}]}) {
-		/call DoOutOfCombatRoutine
-		/if (!${PullMode}) /return ${Macro.Return}
-	} else {
-		/varset LowManaMed FALSE
+	/if (${Bool[${RKCommander}]} && !${OverrideCommander}) /return FALSE
+	
+	/if (${DebugMode}) /echo CheckCommanderAndTank 2
+	
+	/if (${Group.Leader.ID} && !${Group.Leader.Name.Equal[${RKCommander}]} && !${Me.Name.Equal[${RKCommander}]}) {
+		/echo Changing commander from ${RKCommander} to ${Group.Leader.Name}
+		/varset RKCommander ${Group.Leader.Name}
+	}
+/return FALSE
+
+Sub SelectAndMarkTarget
+	/if (${DebugMode}) /echo Starting targeting sequence
+	/call ClearArray "BadTargetIds"
+	/call GetTarget
+	/if (!${Macro.Return}) /return FALSE
+	/if (${DebugMode}) /echo got target
+	/if (${CurrentTargetId} != ${Macro.Return}) {
+		/varset CurrentTargetId ${Macro.Return}
+		/if (${DebugMode}) /echo CurrentTargetId set to ${CurrentTargetId}
 	}
 
-	/call DoCombatRoutine
-	/if (${Macro.Return}) /return TRUE
+	/if (${Me.GroupMarkNPC[1].ID} && ${Me.GroupMarkNPC[1].ID} == ${CurrentTargetId}) /return FALSE
+	/if (!${MarkMainTarget} || !${Group} || ${Group.MarkNpc.ID} != ${Me.ID}) /return FALSE
+	/gmarknpc 1
 /return FALSE
 
 Sub DoCombatRoutine
 	/call ExecuteArrayOfSubs "DefensiveActionSubs"
-	/if (${DebugMode}) /echo Done with defensives
-		
+	/if (${DebugMode}) /echo Done with defensives, doing combat routine
+	/if (${DebugMode}) /echo combat tick 1
 	/if (${BOTMode} != 5) {
-		/call ExecuteArrayOfSubs "PreTargetAcquisitionCombatActionSubs"
+		/if (${DebugMode}) /call ExecuteArrayOfSubs "PreTargetAcquisitionSubs"
 		/if (${Macro.Return}) {
-			/echo Returning early from PreTargetAcquisitionCombatActionSubs
+			/echo Returning early from PreTargetAcquisitionSubs
 			/return TRUE
 		}
 		
-		/if (${DebugMode}) /echo Starting targeting sequence
-		/call ClearArray "BadTargetIds"
-		/call GetTarget
-		
-		/if (!${Macro.Return}) /return FALSE
-		/if (${CurrentTargetId} != ${Macro.Return}) {
-			/varset CurrentTargetId ${Macro.Return}
-			/echo CurrentTargetId set to ${CurrentTargetId}
-		}
-		|/attack on
-		
-		/if (${MarkMainTarget} && ${Group} && ${Group.Leader.ID} == ${Me.ID} && (!${Me.GroupMarkNPC[1].ID} || ${Me.GroupMarkNPC[1].ID} != ${CurrentTargetId})) /gmarknpc 1
+		/call SelectAndMarkTarget
 	}
-
-	/if (!${Target.ID}) /return FALSE
+	/if (${DebugMode}) /echo combat tick 2
 	
+	/if (${Spawn[id ${CurrentStickTargetId}].Type.Equal[PC]}) {
+		/stick off
+		/keypress s
+		/delay 3
+	}
+		
+	/varset EarlyEscapePreviousTick TRUE
+	/if (!${Target.ID} || !${Me.XTarget[1].ID}) /return FALSE
+	|/if (!${Target.Type.Equal[NPC]} && !${Target.Type.Equal[Object]}) /return FALSE
 	/if (${DebugMode}) /echo Selected target ${Target.ID}
 
-
-	/if (${TankId} == ${Me.ID}) {
-		/if (${Me.PctAggro} < 100) /doability "Taunt"
+	/if (${DebugMode}) /echo combat tick 3
+	
+	/if (${IsTank}) {
+		/if (${TauntMode} && ${Me.PctAggro} < 100) /doability "Taunt"
 	} else { 
 		/if (${Me.PctAggro} > ${UpperAggroThreshold}) {
 			/if (${DebugMode}) /echo Exiting early because of agro
 			/return FALSE
 		}
 	}
+
+	/if (${DebugMode}) /echo combat tick 4 
 	
-	/if (${Bool[${Me.XTarget}]} || ${Target.ID}) {
-		/if (${MobMode} >= 2 || ${Me.XTarget} > 10) {
+	/if (${Bool[${Me.XTarget[1].ID}]} || ${Target.ID}) {
+		/if (!${Bool[${Me.XTarget[1].ID}]} && ${Target.PctHPs} == 100) /return TRUE
+		
+		/if (${MOBMode} >= 2 || ${Me.XTarget[4].ID}) {
 			/call ExecuteArrayOfSubs "BurnCombatActionSubs"
 			/if (${Macro.Return}) /return TRUE
 		}
 		
-		/if (${MobMode} == 3 || ${Me.XTarget} > 10) {
+		/if (${MOBMode} == 3 || ${Me.XTarget[5].ID}) {
 			/call ExecuteArrayOfSubs "Burn2CombatActionSubs"
 			/if (${Macro.Return}) /return TRUE
 		}
 
-		/if (${MobMode} == 1 && ${Target.Named}) /varset MobMode 2
+		/if (${MOBMode} == 1 && ${Target.Named}) /varset MOBMode 2
 		
 		/call ExecuteArrayOfSubs "CombatActionSubs"
 		/if (${Macro.Return}) /return TRUE
+	} else {
+		/varset MOBMode ${DefaultMOBMode}
 	}
+	
+	/if (${DebugMode}) /echo combat tick 5
+
 	/varset EarlyEscapePreviousTick FALSE
 /return FALSE
 
 Sub DoOutOfCombatRoutine
+		/if (${DebugMode}) /echo DoOutOfCombatRoutine
+		
 		/if (${BOTMode} < 3 || ${BOTMode} == 5 && ${Me.Invis}) {
 			/call ExecuteArrayOfSubs "InvisModeSubs"
-			/delay 1s
 			/return FALSE
 		}
 	
 		/if (${Me.Class.CanCast} && ${Me.PctMana} < 10) {
 			/varset LowManaMed TRUE
 		}	
-		
+		/if (${DebugMode}) /echo mark - 2
 		/if (${LowManaMed}) {
-			/if (${Stick.Active}) /stick off
+			/if (${Stick.Active}) {
+				/stick off
+				/if (${DebugMode}) /echo stick off 1
+			}
 			/declare doneMedding bool local TRUE
 			/declare i int local 
 			/for i 0 to ${Group.Members}
@@ -247,34 +436,57 @@ Sub DoOutOfCombatRoutine
 		
 			/if (${doneMedding}) {
 				/varset LowManaMed FALSE
-				/i say full mana, all done
+				/docommand /${ChatCommand} "full mana, all done"
 				/sit off			
 			}
 		}
 
 		/if (${LowManaMed} && !(${Me.Sitting} || ${Me.Mount.ID})) {
-			/if (${Twist}) /twist off
-			/if (${MeddingMessageTimer} == 0) {
-				/i say medding, you should med
-				/varset MeddingMessageTimer 10
+			/if (${Twist}) {
+				/twist off
+				/stopcast
 			}
-			/sit on
+			/if (${MeddingMessageTimer} == 0 && ${ShouldBroadcastMed}) {
+				/docommand /${ChatCommand} "medding, you should med"
+				/varset MeddingMessageTimer 10s
+				/sit on
+			}
 		}
 
 		/if (${LowManaMed}) /return TRUE
 	
+	
+		/if (${DebugMode}) /echo mark - 3
 		/call ExecuteArrayOfSubs "NonCombatSubs"
+/return FALSE
+
+Sub FaceAECentroid
+	/if (${FaceTimer} > 0) {
+		/if (${DebugMode}) /echo Exiting FaceAECentroid - Timer = ${FaceTimer}
+		/return FALSE
+	}
+	/varset FaceTimer 4
+	/if (${AECentroidY} == 0 || ${AECentroidX} == 0) {
+		/call EvaluateAETargets
+		/if (!${Macro.Return}) /return FALSE
+	}
+	/call DistanceToCentroid
+	|/if (${DebugMode}) 
+	/if (${DebugMode}) /echo Facing AE centroid - distance = ${Macro.Return}
+	/if (${Macro.Return} > 25) /return FALSE
+	/face fast loc ${AECentroidY}, ${AECentroidX} nolook
 /return FALSE
 
 Sub ForageAndBag
 	/if (!${ForageMode}) /return FALSE
-	/if (${Me.AbilityReady[Forage]}) {
+	/autoinv
+ 	/if (${Me.AbilityReady[Forage]}) {
 		/doability "Forage"
-		/delay 1s
+		/delay 2
 		/autoinv
-		/delay 5
+		/delay 2
 		/autoinv		
-		/autoinv				
+		/autoinv
 	}
 /return FALSE
 
@@ -317,8 +529,10 @@ Sub ConfigureChannels
 
 Sub CheckSitting
 	/if (${DebugMode}) /echo CheckSitting
-	/if (!${SitBetweenCombat} || (${BOTMode} != 2 && ${BOTMode} != 4 && ${BOTMode} != 0)) /return FALSE
-	/if (!${Bool[${Me.XTarget}]} && !${Me.Mount.ID} && !${Me.Sitting} && !${Me.Moving} && (${Me.PctMana} < 96 || ${Me.PctEndurance} < 96)) {
+	/if (!${SitBetweenCombat}) /return FALSE
+	/if (${BOTMode} != 2 && ${BOTMode} != 4 && ${BOTMode} != 0) /return FALSE
+	
+	/if (!${Bool[${Me.XTarget[1].ID}]} && !${Me.Mount.ID} && !${Me.Sitting} && !${Me.Moving} && (${Me.PctMana} < 70 || ${Me.PctEndurance} < 60)) {
 		/sit on
 		/varset IsAutoSitting TRUE
 	}
@@ -342,7 +556,7 @@ Sub RKItemSlotCast(string itemSlot)
 		/if (${DebugMode}) /echo cast item "${Me.Inventory[${itemSlot}].Name}"
 		/cast item "${Me.Inventory[${itemSlot}].Name}"
 	} else {
-		/echo ${itemSpell} won't stack
+		/if (${DebugMode}) /echo ${itemSpell} won't stack
 	}
 /return ${Cast.Result.Equal[CAST_SUCCESS]}
 
@@ -402,8 +616,8 @@ Sub UpdateMercenaryStance
 Sub CheckInvisModeCombat
 	/if (${DebugMode}) /echo CheckInvisModeCombat
 
-	/if (${Bool[${Me.XTarget}]}) {
-		/docommand /${ChatCommand} attack, but stay on me
+	/if (${Bool[${Me.XTarget[1].ID}]}) {
+		/docommand /${ChatCommand} "followcombat"
 		/delay 5
 		/return FALSE
 	}
@@ -411,62 +625,67 @@ Sub CheckInvisModeCombat
 
 Sub RKAACast(string AAName)
 	/if (${DebugMode}) /echo RKAACast ${AAName}
+	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
+
 	/if (${Me.AltAbilityReady[${AAName}]}) {
-		/alt activate ${AltAbility[${AAName}].ID}
-		/return TRUE
+		/alt act ${AltAbility[${AAName}].ID}
+		/return FALSE
 	}
 /return FALSE
 
 Sub RKAACast(string AAName, int targetId)
-	/if (${DebugMode}) /echo RKAACast ${AAName} ${targetId}
+	/if (${DebugMode}) /echo RKAACast name: ${AAName} target:${targetId}
+	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE	
+
+	/if (${AltAbility[${AAName}].Spell.SpellType.Equal[Detrimental]} && ${Spawn[id ${targetId}].Type.Equal[PC]}) /return FALSE
+	/if (${AltAbility[${AAName}].Spell.SpellType.Equal[Beneficial]} && ${Spawn[id ${targetId}].Type.Equal[NPC]}) /return FALSE
 	
 	/if (${Target.ID} != ${targetId}}) {
 		/target id ${targetId}
-		/delay 5
+		/delay 1s ${Target.ID} == ${targetId}
 	}
 	
 	/if (${Me.AltAbilityReady[${AAName}]}) {
 		/if (!${Target.Buff[${Me.AltAbility[${AAName}].Spell.Name}].ID}) {
 			/alt activate ${AltAbility[${AAName}].ID}
-			/return TRUE
+			/return FALSE
 		}
 	}
 /return FALSE
 
 Sub RKAACast(string AAName, string buffName, int targetId)
 	/if (${DebugMode}) /echo RKAACast ${AAName} buffName: ${buffName} targetId: ${targetId}
-
+	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
 	if (${Me.Buff[${buffName}].ID}) /return FALSE
 	
 	/if (${Target.ID} != ${targetId}}) {
 		/target id ${targetId}
-		/delay 5 ${Target.ID} == ${targetId}
+		/delay 1s ${Target.ID} == ${targetId}
 	}
 	
 	/if (${Me.AltAbilityReady[${AAName}]}) {
 		/alt activate ${AltAbility[${AAName}].ID}
-		/return TRUE
+		/return FALSE
 	}
 /return FALSE
 
 Sub RKDisc(string discName)
 	/if (${DebugMode}) /echo RKDisc ${discName}
-	
+	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
 	/if (!${Me.CombatAbilityReady[${discName}]}) /return FALSE
-	
-	/if (${Bool[${Me.ActiveDisc}]}) {
-		/if (${Me.CombatAbility[${Me.CombatAbility[${discName}]}].Duration} > 0) {
-			|/if (${Me.ActiveDisc.Name.Equal[Steadfast Defense]}) {
-			|	/stopdisc
-			|	/delay 1s !${Bool[${Me.ActiveDisc}]}
-			|} else {
-			|	/echo Skipping ${discName} - already running disc - ${Me.ActiveDisc}
-			|	/return FALSE
-			|}
-		}
+	/if (${Bool[${Me.CombatAbility[${discName}]}]}) {
+		/if (${Me.CombatAbility[${Me.CombatAbility[${discName}]}].Duration} > 0 && ${Bool[${Me.ActiveDisc}]}) /return FALSE
+		/if (${DebugMode}) /echo Casting ${Me.CombatAbility[${Me.CombatAbility[${discName}]}].Name}
+	} else {
+		/if (${DebugMode}) /echo casting ${discName}, though it's not a CombatAbility
 	}
 	
+	
 	/disc ${discName}
+	/delay 1
+	/disc ${discName}	
+	/delay 2	
+	/disc ${discName}		
 /return FALSE
 
 Sub ExecuteBaseDefensiveActions

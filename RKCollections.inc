@@ -4,15 +4,18 @@ Sub ExecuteArrayOfSubs(string arrayName)
 	/declare arrayItem string local
 	/declare i int local
 	/for i 1 to ${${arrayName}.Size}
+		/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
 		/varset arrayItem ${${arrayName}[${i}]}
 		/if (!${Bool[${arrayItem}]}) /return FALSE
 		/if (${DebugMode}) /echo Executing ${arrayItem}
 		/call ${arrayItem}
 		/if (${Bool[${Macro.Return}]} && ${Macro.Return}) {
-			/if (${DebugMode}) /echo early escape from ${arrayName} on item ${i} ${arrayItem}
+			|/if (${DebugMode}) 
+			/echo early escape from ${arrayName} on item ${i} ${arrayItem}
 			/varset EarlyEscapePreviousTick TRUE
 			/return TRUE
 		}
+		
 	/next i
 /return FALSE
 

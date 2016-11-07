@@ -2,13 +2,13 @@ Sub Init_RKPetBase
 	/declare PetBuffs[${DynamicArraySize}] string outer
 	
 	/declare PetSpellName string outer
+	/declare PetAttackDistance int outer 50
 
 	/call AddToArray "NonCombatSubs" "CheckPet"
 	/call AddToArray "CombatActionSubs" "ExecutePetCombatActions"
 	
 	/call AddToArray "CombatActionSubs" "ExecutePetCombatActions"
-	/call AddToArray "AssistCalledSubs" "AssistWithPet"
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "CheckPetBuffs"
+	/call AddToArray "PreTargetAcquisitionSubs" "CheckPetBuffs"
 	
 	/declare PetAttackGHold string outer "on"
 	/declare PetAttackFocus string outer "on"
@@ -37,6 +37,13 @@ Sub PetAttackMode
 
 Sub AssistWithPet
 	/if (!${Target.Type.Equal[NPC]} || !${Me.Pet.ID}) /return FALSE
+	
+	/if (${Target.Distance} > ${PetAttackDistance}) /return FALSE
+	
+	/if (!${IsTank}) {
+		/if (${Target.PctHPs} > 98) /return FALSE
+	}
+	
 	/pet attack
 	/call SetPetAttackMode
 /return FALSE

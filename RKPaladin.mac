@@ -23,12 +23,11 @@ Sub Main
 	
 	/varset SingleTargetHealThreshold 60
 	
-	/varset TargetHpEngagePercentage 100
 
 
-	/varset KeepAgroOnAdds FALSE
+	/varset KeepAgroOnAdds TRUE
 
-	/varset TargetHpEngagePercentage 100
+
 	/varset UpperAggroThreshold 101
 	
 	
@@ -46,7 +45,7 @@ Sub Main
 
 	/call AddToArray "CombatAbilities" "Bash"
 	/call AddToArray "CombatAbilities" "Disarm"
-	/call AddToArray "CombatAbilities" "Taunt"
+
 		
 	/call AddToArray "NonCombatSelfBuffs" "Armor of Formidable Grace"
 	/call AddToArray "NonCombatSelfBuffs" "Reverent Fury"
@@ -81,8 +80,8 @@ Sub ExecutePriorityCombatActions
 	/if (${BOTMode} != 5) /face fast nolook
 	/if (!${Me.Buff[Yaulp].ID} && !${Me.Sitting} && !${Me.Moving}) /call RKAACast "Yaulp (Lesser)"
 	
-	/if (${CurrentGroupHealthPercentage} < 95 && ${Me.GemTimer[${Me.Gem[Splash of Cleansing]}]} == 0) {
-		/echo CurrentGroupHealthPercentage = ${CurrentGroupHealthPercentage} casting Splash
+	/if (${GroupHealthPercentage} < 95 && ${Me.GemTimer[${Me.Gem[Splash of Cleansing]}]} == 0) {
+		/echo GroupHealthPercentage = ${GroupHealthPercentage} casting Splash
 		/cast "Splash of Cleansing"
 		/return TRUE
 	}
@@ -98,7 +97,7 @@ Sub ExecutePriorityCombatActions
 		/cast item "Magmatic Deflector"
 	}
 	
-	/if (${Bool[${Me.XTarget}]}) /call RKAACast "Force of Disruption"
+	/call RKAACast "Force of Disruption"
 /return FALSE
 
 Sub PallyCombat

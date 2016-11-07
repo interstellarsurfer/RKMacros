@@ -3,47 +3,39 @@
 
 Sub Main
 	/call Init_RKBase
+	/call AddToArray "CombatActionSubs" "WarriorCombatActions"	
 	/call Init_RKMeleeBase
 	
 | *** VARIABLE DECLARATIONS
 	
 	/varset StickFlags loose
+	/if (${Group.MainAssist.ID} != ${Me.ID}) /varset KeepAgroOnAdds TRUE
 	
-	|/varset ForageMode TRUE
+	/varset MaxTargetDistance 300
 
-	/varset KeepAgroOnAdds TRUE
-
-	/varset MaxTargetDistance 5000
-	/varset TargetHpEngagePercentage 100
 	/varset UpperAggroThreshold 100
 	/varset MercBurnThreshold 100
+	/varset PullWithAutoFire TRUE
 	
-	/varset TankId ${Me.ID}
+	/declare TauntMode bool outer ${Bool[${Me.ID} == ${Group.MainTank.ID}]}
 	
-	/varset StickDistance 10
-	
-	/call AddToArray "CombatDiscs" "Dichotomic Shield"
+	/varset StickDistance 18
+
 	/call AddToArray "CombatDiscs" "Shield Topple"
 	/call AddToArray "CombatDiscs" "Throat Jab"
 	/call AddToArray "CombatDiscs" "Tempestuous Defense Discipline"	
-	/call AddToArray "CombatDiscs" "Warrior's Bulwark Rk. II"
+	/call AddToArray "CombatDiscs" "Warrior's Bulwark Rk. III"
 	/call AddToArray "CombatDiscs" "Phantom Aggressor Rk. II"
-	/call AddToArray "CombatDiscs" "Tormenting Shout Rk. II"
-	/call AddToArray "CombatDiscs" "Brutal Onslaught Discipline"
-	/call AddToArray "CombatDiscs" "Armor of Darkened Runes Rk. II"
 	
-	/call AddToArray "BurnDiscs" "No Time to Bleed Rk. II"
-	/call AddToArray "BurnDiscs" "Barbed Tongue Discipline Rk. II"
-	/call AddToArray "BurnDiscs" "Unflinching Attention Rk. II"
+	/call AddToArray "CombatDiscs" "Armor of Darkened Runes Rk. III"
+	
 	/call AddToArray "BurnDiscs" "Weapon Bond Rk. II"
 	
 	/call AddToArray "CombatAbilities" "Bash"
 	/call AddToArray "CombatAbilities" "Slam"	
 	/call AddToArray "CombatAbilities" "Disarm"	
-	/call AddToArray "CombatAbilities" "Taunt"		
 	
 	/call AddToArray "NonCombatSubs" "WarriorNonCombat"
-	/call AddToArray "CombatActionSubs" "WarriorCombatActions"	
 	/call AddToArray "BurnCombatActionSubs" "WarriorBurn"	
 	/call AddToArray "Burn2CombatActionSubs" "WarriorBurn2"		
 	/call AddToArray "DefensiveActionSubs" "WarriorDefensives"		
@@ -60,115 +52,175 @@ Sub Main
 /return
 
 Sub WarriorDefensives
-	/if (${Me.XTarget} > 1) {
-		/call RKAACast "Imperator's Command" ${CurrentTargetId}
+	/if (${TauntMode}) {
+		/if (${Me.XTarget[5].ID}) {
+			/call RKDisc "Flash of Anger Rk. II"
+		}
 	}
-
-	/if (${Me.PctHPs} < 30) /call RKAACast "Warlord's Tenacity" ${CurrentTargetId}
-	/if (${Me.PctHPs} < 50) /call RKDisc "Flash of Anger Rk. II"
-	/if (${Me.PctHPs} < 60) /call RKAACast "Warlord's Resurgence" ${CurrentTargetId}
 	
+	/if (${Target.Named} || ${Me.XTarget[2].ID}) {
+		/call RKDisc "Dichotomic Shield"
+		/if (${Me.PctHPs} < 50) /call RKDisc "Flash of Anger Rk. II"		
+		
+		/call RKDisc "Armor of Darkened Runes Rk. II"
+	}
+	
+	/if (${Me.ActiveDisc.Name.Equal[Armor of Darkened Runes Rk. II]}) /call RKAACast "Hold the Line" ${CurrentTargetId}
+	
+	/if (${Me.PctHPs} < 70) /call RKDisc "Flash of Anger Rk. II"			
+	/if (${Me.PctHPs} < 30) /call RKAACast "Warlord's Tenacity" ${CurrentTargetId}
+	/if (${Me.PctHPs} < 60) /call RKAACast "Warlord's Resurgence" ${CurrentTargetId}
 /return FALSE
 
 Sub WarriorNonCombat
-	/if (!${Bool[${Me.Aura[Champion's Aura]}]} && !${Me.Moving} && !${Bool[${Me.Song[Circle of Power I Effect]}]}) {
+	/if (!${Bool[${Me.Aura[Champion's Aura]}]} && !${Me.Moving} && !${Bool[${Me.Song[Circle of Power IV Effect]}]}) {
 		/call RKDisc "Champion's Aura"
 		|/return TRUE
 	}
 
-	/if (${Me.PctEndurance} < 25) {
-		/if (${Me.CombatAbilityReady[Breather Rk. II]}) {
+	/if (${Me.PctEndurance} < 29) {
+		/if (${Me.CombatAbilityReady[Breather Rk. III]}) {
 			/if (${Bool[${Me.ActiveDisc}]}) {
 				/stopdisc
 				/delay 1s
 			}
-			/call RKDisc "Breather Rk. II"
+			/call RKDisc "Breather Rk. III"
+			/return FALSE
 		}
 	}
 /return FALSE
 
 Sub WarriorCombatActions
-	/call RKDisc "Cyclone Roar Rk. II"	
-	/if (${Me.PctAggro} < 100) /doability "Taunt"
+	/if (${DebugMode}) /echo Warrior combat actions
+	/if (!${Target.ID}) /return FALSE
+	/if (${Target.ID} == ${Me.ID}) {
+		/target clear
+		/return FALSE
+	}
+	
+	/call RKItemCast "Circle of Power IV Effect" "Rage of Rolfron"
 
-	/if (${Target.Distance} > 30 && !${Me.AutoFire}) {
-		/autofire
+	/if (${Target.PctAggro} < 100) {
+		/call RKDisc "Tormenting Shout Rk. III"
 	}
 	
-	/if (${Me.XTarget} > 2) {
-		/call RKDisc "Pain Doesn't Hurt"
-		/if (${Me.CombatAbilityReady[Pain Doesn't Hurt]}) /return TRUE
+	/if (${CurrentStickTargetId} == ${RKCommanderId} && ${Stick.Active}) {
+		/stick off
+		/return FALSE
+	}
+
+	/if (${Me.AAPoints} > 10) {
+		/if (!${Me.AltAbility[Glyph of Destruction II]}) {
+			/echo buying melee glyph of destruction II
+			/alt buy 7019
+		}
+		/call RKAACast "Glyph of Destruction II" ${CurrentTargetId}
+		/if (${Macro.Return}) /docommand /${ChatCommand} "Running Glyph of Destruction II"
+	}	
+
+	
+	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${BOTMode} != 5) {
+		/if (${Target.Distance} > 20 && ${Target.Distance} < 80) {
+			/call RKAACast "Battle Leap" ${CurrentTargetId}
+			/if (${Macro.Return}) {
+				/if (${Stick.Active}) /stick off
+				/delay 1s
+				/face fast nolook
+			}
+		}
 	}
 	
-	/if (${Me.XTarget} > 3 && ${Me.CombatAbilityReady[Wade In to Battle Rk. II]}) {
+	/if (${Target.Named} || ${Me.XTarget[4].ID}) /call RKDisc "Dichotomic Shield"
+	
+	/if (${Target.PctHPs} == 100) /return FALSE
+	/if (${TauntMode} && ${Me.PctAggro} < 99) /doability "Taunt"
+	
+	/call RKDisc "Cyclone Roar Rk. III"	
+		
+	/if (${InvSlot[pack4].Item.Item[1].TimerReady} == 0) {
+		/if (!${Me.Moving}) /cast item "Blood Drinker's Coating"
+	}
+	
+	/if (${Bool[${Me.XTarget[2].ID}]} || ${Target.Named}) {
+		/call RKDisc "Pain Doesn't Hurt Rk. III"
+	}
+		
+	/if (${TauntMode} && ${Bool[${Me.XTarget[3].ID}]} && ${Me.CombatAbilityReady[Wade In to Battle Rk. II]}) {
 		/call RKDisc "Wade In to Battle Rk. II"
-		/return TRUE
+		|/return TRUE
 	}
 
-	/if (${Target.Distance} < 50) /call RKDisc "Stormstrike Blades Rk. II"
+	/if (${KeepAgroOnAdds} && ${Target.Distance} < 50) /call RKDisc "Stormstrike Blades Rk. III"
 
 	/if (!${Me.Song[Field Protector Rk. II].ID}) /call RKDisc "Field Protector Rk. II"
 	/if (!${Me.Song[Commanding Voice].ID}) /call RKDisc "Commanding Voice"
 	
-	/if (!${Me.Underwater}) {
-		|/if (${Target.Distance} > 100) /call RKAACast "Furious Leap" ${CurrentTargetId}
-		|/if (${Target.Distance} > 80) /call RKAACast "Battle Leap" ${CurrentTargetId}
-	}
-		
 	/if (${Target.PctHPs} <= 20) {
 		/call RKDisc "Calculated Strike Rk. II"
 	} else {
-		/call RKDisc "Insult Rk. II"
+		/if (${TauntMode}) /call RKDisc "Insult Rk. III"
 	}
-		
-	/call CountTargetsInRange ${MaxTargetDistance}
-	/declare targetCount int local ${Macro.Return}
-	/if (${targetCount} >= 3) {
-		/call RKAACast "Area Taunt" ${CurrentTargetId}
-		/call RKAACast "Rampage" ${CurrentTargetId}
+	
+	/if (${IsTank}) {
+		/call CountTargetsInRange ${MaxTargetDistance}
+		/declare targetCount int local ${Macro.Return}
+		/if (${targetCount} >= 3) {
+			/if (${TauntMode}) /call RKAACast "Area Taunt" ${CurrentTargetId}
+			/if (!${Spawn[Nerdbait].ID}) /call RKAACast "Rampage" ${CurrentTargetId}
+		}
 	}
 	
 	/if (${targetCount} > 1) /call RKDisc "Roar of Challenge Rk. II"
 	
 	/call RKAACast "Ageless Enmity" ${CurrentTargetId}
 	/call RKAACast "Warlord's Grasp" ${CurrentTargetId}
-	/call RKAACast "Rage of the Forsaken" ${CurrentTargetId}
+
 	/call RKAACast "War Stomp" ${CurrentTargetId}
-	/call RKAACast "Blast of Anger" ${CurrentTargetId}
+	/if (${TauntMode}) /call RKAACast "Blast of Anger" ${CurrentTargetId}
   	/call RKAACast "Knee Strike" ${CurrentTargetId}
 
 	/if (${Target.ID} == ${CurrentTargetId} && !${Target.Buff[${AltAbility[Call of Challenge].Spell.Name}].ID}) /call RKAACast "Call of Challenge" ${CurrentTargetId}
  
  	/call RKAACast "Fundament: Third Spire of the Warlord" ${CurrentTargetId}
  	/call RKAACast "Gut Punch" ${CurrentTargetId}
+	/call RKAACast "Warlord's Bravery" ${CurrentTargetId}
+ 	/call RKAACast "Brace for Impact" ${CurrentTargetId}
 
-	/if (!${Me.Moving}) /call RKItemCast "Warrior's Instinct" "Castaway Breastplate of Havok"
-
-	/call RKAACast "Warlord's Bravery"
- 	/call RKAACast "Brace for Impact"
-	
+	/if (!${Me.Moving}) /call RKItemSlotCast chest	
 	/if (!${Bool[${Me.ActiveDisc}]}) /call RKDisc "Stout Defense Rk. II"
-
 /return FALSE
 
 
 Sub WarriorBurn
-	/if (!${Me.ActiveDisc.Name.Equal[Final Stand Discipline]} && ${Me.CombatAbilityReady[Final Stand Discipline]}) {
+	/if (${BOTMode} != 5 && !${Me.ActiveDisc.Name.Equal[Last Stand Discipline Rk. II]} && ${Me.CombatAbilityReady[Last Stand Discipline Rk. II]}) {
 		/stopdisc
 		/delay 1s
-		/call RKDisc "Final Stand Discipline"
+		/call RKDisc "Last Stand Discipline Rk. II"
+	}
+
+	/if (${Bool[${Me.XTarget[4].ID}]}) {
+		/call RKAACast "Imperator's Command" ${CurrentTargetId}	
 	}
 	
-	/if (${Bool[${Target.Casting}]}) /call RKDisc "Shield Reflect"
+	/if (${Bool[${Me.XTarget[1].ID}]}) {
+		/call RKAACast "Imperator's Precision" ${CurrentTargetId}
+	}
+	
+	/call RKDisc "Pain Doesn't Hurt Rk. III"
+	
+	/if (${IsTank} && ${TauntMode}) {
+		/call RKDisc "Unflinching Attention Rk. III"	
+		/call RKAACast "Warlord's Fury" ${CurrentTargetId}
+		/call RKAACast "Rage of the Forsaken" ${CurrentTargetId}		
+		/call RKAACast "Projection of Fury" ${CurrentTargetId}
+		/call RKAACast "Mark of the Mage Hunter" ${CurrentTargetId}
+		/if (${Bool[${Target.Casting}]}) /call RKDisc "Shield Reflect"
+	}
 
 	/call RKDisc "Strike Through Rk. II"
 	/call RKAACast "Wars Sheol's Heroic Blade" ${CurrentTargetId}
 	/call RKAACast "Blade Guardian" ${CurrentTargetId}
- 	/call RKAACast "Mark of the Mage Hunter" ${CurrentTargetId}
- 	/call RKAACast "Warlord's Fury" ${CurrentTargetId}
- 	/call RKAACast "Projection of Fury" ${CurrentTargetId}
 	/call RKAACast "Rage of Rallos Zek" ${CurrentTargetId}
-
 /return FALSE
 
 

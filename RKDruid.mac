@@ -16,50 +16,51 @@ Sub Main
 
 | *** VARIABLE DECLARATIONS
 
+	/varset HealMode FALSE
+
 	/varset InCombatStickToCommander TRUE
 	/declare ShouldSnare bool outer TRUE	
 
-	/varset TargetHpEngagePercentage 100
+
 	/varset UpperAggroThreshold 100
 	/varset SpellMemSlot 10
 
-	/varset HealSpell Panavida Rk. II
+	/varset HealSpell Lunasoothe Rk. II
 	/varset TankHealThreshold 60
 	/varset SingleTargetHealThreshold 60
 	
-	/varset EmergencyHealSpell Resurgence Rk. II
+	/varset EmergencyHealSpell Lunasoothe Rk. II
 	/varset EmergencyHealThreshold 50
 	
-	/varset GroupHeal Lunassuage
-	/varset GroupHealThreshold 70
+	/varset GroupHeal Lunasoothe Rk. II
+	/varset GroupHealThreshold 75
 	
-	/varset EmergencyGroupHeal Survival of the Fortuitous
-	/varset EmergencyGroupHealThreshold 0
+	/varset EmergencyGroupHeal Survival of the Serendipitous Rk. III
+	/varset EmergencyGroupHealThreshold 90
 	
 	/call AddToArray "InvisModeSubs" "CastGroupInvis"
 	/call AddToArray "NonCombatSubs" "DruidNonCombat"
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "CheckCheetah"
+	/call AddToArray "NonCombatSubs" "CheckCheetah"
+	/call AddToArray "PreTargetAcquisitionSubs" "CheckCheetah"
 	/call AddToArray "DefensiveActionSubs" "ExecuteDefensiveActions"
 	/call AddToArray "BurnCombatActionSubs" "DruidBurnActions"
 	
-	/call AddToArray "CombatTankBuffs" "Pellicle of the Reptile Rk. II"
-	|/call AddToArray "CombatTankBuffs" "Daggerthorn Rk. II"
-
+	|/call AddToArray "DetrimentalSpells" "Dichotomic Winds"	
 	/call AddToArray "DetrimentalSpells" "Nature's Fiery Wrath Rk. II"	
-	/call AddToArray "DetrimentalSpells" "Sporali Storm Rk. II"		
-	/call AddToArray "DetrimentalSpells" "Remote Moonflame Rk. II"		
-	/call AddToArray "DetrimentalSpells" "Summer Sunfire Rk. II"	
-	/call AddToArray "DetrimentalSpells" "Argent Thornmaw Rk. II"
-	/call AddToArray "DetrimentalSpells" "Sunfire Blessing Rk. II"	
+	/call AddToArray "DetrimentalSpells" "Anabatic Roar Rk. II"	
+	/call AddToArray "DetrimentalSpells" "Remote Sunflash Rk. III"		
+	/call AddToArray "DetrimentalSpells" "Blizard Breath Rk. II"		
+	/call AddToArray "DetrimentalSpells" "Sunfire Blessing Rk. II"		
 
-	/call AddToArray "DetrimentalSpells" "Typhoon of the Stormborn"
-	/call AddToArray "DetrimentalSpells" "Lustrous Frost"
-	/call AddToArray "DetrimentalSpells" "Nature's Withering Wrath"
+	/call AddToArray "CombatTankBuffs" "Pellicle of the Reptile Rk. II"
 	
-	/call AddToArray "NonCombatSelfBuffs" "Talisman of the Faithful Rk. II"
 	/call AddToArray "NonCombatSelfBuffs" "Legacy of Daggerspurs Rk. II"	
-	/call AddToArray "NonCombatSelfBuffs" "Mask of the Bosquetender"
-	/call AddToArray "NonCombatSelfBuffs" "Spikethistle Coat"
+	/call AddToArray "NonCombatSelfBuffs" "Mystical Ways Rk. III"		
+	/call AddToArray "NonCombatSelfBuffs" "Shieldstone Blessing Rk. II"			
+	
+	/call AddToArrayWithUniqueName "NonCombatSelfBuffs" "Copsetender's Unity Rk. II" "Daggerspur Coat Rk. II"	
+	/call AddToArrayWithUniqueName "NonCombatSelfBuffs" "Copsetender's Unity Rk. II" "Mask of the Corpsetender Rk. II"		
+	
 	
 | *** INITIALIZATION
 	/echo Starting Box Commander - Druid Macro
@@ -70,8 +71,8 @@ Sub Main
 /return
 
 Sub DruidNonCombat
-	/if (!${Me.Buff[Flight of Eagles].ID}) /call RKAACast "Flight of Eagles"
-	/if (!${Me.Aura.Equal[Wildspark Aura]}) /call RKBuff "Wildspark Aura" ${CurrentTargetId}
+	|/if (!${Me.Buff[Flight of Eagles].ID}) /call RKAACast "Flight of Eagles"
+	/if (!${Me.Aura.Equal[Frostweave Aura Rk. II]}) /call RKBuff "Frostweave Aura Rk. II" ${Me.ID}
 /return FALSE
 
 Sub DruidCombat
@@ -79,10 +80,12 @@ Sub DruidCombat
 
 	/if (${SnareMode} && ${ShouldSnare} && !${Target.Buff[Entrap].ID}) /call RKAACast "Entrap"
 
-	/if (${Me.XTarget} > 1) {
+	/if (${Bool[${Me.XTarget[1].ID}]}) {
 		/call RKCast "Glacial Pillar Rk. II" ${CurrentTargetId}
 		/if (${Macro.Return}) /return TRUE
 	}
+	
+	/call RKAACast "Fire Storm" ${CurrentTargetId}
 	
 	/if (${Target.PctHPs} < 20) /return FALSE
 	/if (!${Target.Buff[Fixation of Ro I].ID}) /call RKAACast "Blessing of Ro" ${CurrentTargetId}
@@ -93,6 +96,9 @@ Sub DruidCombat
 	
 	/call RKAACast "Peaceful Spirit of the Wood" ${CurrentTargetId}
 	/call RKAACast "Wrath of the Wild" ${TankId}
+	
+	/call RKItemSlotCast chest
+
 	/if (!${Bool[${Me.Buff[Improved Twincast III]}]}) /call RKCast "Twincast" ${CurrentTargetId}	
 /return FALSE
 
@@ -126,6 +132,8 @@ Sub DruidBurnActions
 	/call RKAACast "Nature's Fury"	
 	/call RKAACast "Nature's Guardian"		
 	/call RKAACast "Spirit of the Bear" ${TankId}
+
+	/call RKCast "Dichotomic Winds" ${CurrentTargetId}
 /return FALSE
 
 Sub CheckCheetah
@@ -137,8 +145,8 @@ Sub CheckCheetah
 /return FALSE
 	
 Sub ExecuteDefensiveActions
-	/if (${CurrentGroupHealthPercentage} != 0 && ${CurrentGroupHealthPercentage} < 30) /call RKAACast "Exodus"
-	/if (${Me.PctHPs} < 15) /call RKAACast "Exodus"
+	|/if (${GroupHealthPercentage} != 0 && ${GroupHealthPercentage} < 30) /call RKAACast "Exodus"
+	/if (${Me.PctHPs} < 15) /call RKAACast "Egress"
 	/if (${Me.PctHPs} < 50) /call RKAACast "Veil of the Underbrush"
 	/if (${Me.PctHPs} < 70) /call RKAACast "Protection of Direwood"
 	/if (${Me.PctHPs} < 90) /call RKAACast "Wrath of the Wild" ${CurrentTargetId}

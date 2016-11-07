@@ -5,6 +5,9 @@
 
 Sub Main
 	/call Init_RKBase
+	/call AddToArray "DefensiveActionSubs" "RogueDefensives"		
+	/call AddToArray "CombatActionSubs" "RogueCombat"
+	/call AddToArray "BurnCombatActionSubs" "RogueBurn"
 	/call Init_RKMeleeBase
 	/call Init_RKCasterBase
 	|/call AddToArray "CombatActionSubs" "CheckMeleeDistance"
@@ -12,12 +15,14 @@ Sub Main
 		
 | *** VARIABLE DECLARATIONS
 
+	/varset InCombatStickToCommander FALSE
 	/varset CharmMode FALSE
 	/varset CCMode FALSE
 	/varset SingleTargetMez Blinding Burst Rk. II
 	/varset MezSub RogueCC
 	/varset SingleTargetMezLevelCap 105
 	/varset StickFlags behind
+	/varset StickDistance 9
 		
 	/varset MaxTargetDistance 5000
 		
@@ -42,9 +47,6 @@ Sub Main
 		
 	/call AddToArray "InvisModeSubs" "HideAndSneak"
 	/call AddToArray "NonCombatSubs" "RogueNonCombatSubs"
-	/call AddToArray "DefensiveActionSubs" "RogueDefensives"		
-	/call AddToArray "CombatActionSubs" "RogueCombat"
-	/call AddToArray "BurnCombatActionSubs" "RogueBurn"
 
 	/call AddToArray "CombatDiscs" "Hidden Blade Rk. II"
 	
@@ -69,16 +71,16 @@ Sub RogueCC(ccTargetId)
 
 Sub CheckMeleeDistance
 	/doability "Backstab"
-	/if (${Spawn[${RKCommander} pc].ID} == ${Me.ID} && ${Target.Distance} > ${MaxMeleeDistance}) /return TRUE
+	/if (${RKCommanderId} == ${Me.ID} && ${Target.Distance} > ${MaxMeleeDistance}) /return TRUE
 /return FALSE
 
 Sub RogueNonCombatSubs
 	/if (!${Me.Invis}) {
 		/doability "Hide"
 		/doability "Sneak"
-	} else {
-		|/call RKDisc "Daggerlunge"
 	}
+
+	|/if (${Me.Invis}) /call RKDisc "Daggerlunge"
 	
 	/if (${Me.PctEndurance} < 25) {
 		/if (${Me.CombatAbilityReady[Breather Rk. II]}) {
@@ -89,21 +91,26 @@ Sub RogueNonCombatSubs
 			/call RKDisc "Breather Rk. II"
 		}
 	}
-
-	|/if (!${Target.ID} || !${Target.Type.Equal[NPC]}) /return FALSE
-	
 /return FALSE
 
 Sub RogueBurn
+	/if (!${Me.Moving}) /cast item "Blood Drinker's Coating"
+
+	/if (!${Me.AltAbility[Glyph of Destruction II]}) /alt buy 7019
+	/call RKAACast "Glyph of Destruction II" ${CurrentTargetId}
+
 	/call RKDisc "Frenzied Stabbing Discipline"
 	/call RKDisc "Eradicator's Discipline"
 	/call RKAACast "Fundament: Third Spire of the Rake"
 
+	/call RKDisc "Dichotomic Weapons"
+	
 	/call RKAACast "Envenomed Blades"
 	/call RKAACast "Rogue's Fury"
 
-	/call RKDisc "Shrouding Speed Discipline"
 	/call RKDisc "Weapon Covenant"
+	
+	/doability "Backstab"
 /return FALSE
 
 Sub RogueCombat
@@ -115,7 +122,11 @@ Sub RogueCombat
 			/varset poisonFound TRUE
 		}
 	/next i
-
+	
+	/if (!${Stick.Active} && ${Target.Type.Equal[NPC]}) {
+		/call SetStickTarget ${Target.ID} ${StickDistance}
+	}
+	
 	/if (!${poisonFound}) /cast item "Consigned Bite of the Shissar XVIII"
 	/if (!${Me.Buff[Bite of the Shissar].ID} && !${Bool[${Me.Hasted}]}) /cast item "Distillate of Alacrity X"
 	/if (${Target.PctHPs} > 50) /call RKAACast "Absorbing Agent" ${CurrentTargetId}
@@ -126,11 +137,13 @@ Sub RogueCombat
 	
 	/if (${Me.XTarget} > 2 && ${Target.PctHPs} < 80) {
 		/call RKAACast "Rake's Rampage" ${CurrentTargetId}
-		/if (${Macro.Return}) /i say AE Burn!		
+		/if (${Macro.Return}) /docommand /${ChatCommand} "AE Burn!"
 		/call RKAACast "Rogue's Fury" ${CurrentTargetId}
 		/call RKDisc "Frenzied Stabbing Discipline"
 	}
 	
+	/call RKDisc "Shrouding Speed Discipline"
+		
 	
 	/doability "Disarm"
 	/doability "Intimidation"
@@ -141,12 +154,15 @@ Sub RogueCombat
 
 	/if (${Target.PctHPs} < 30) /return FALSE
 	
-	/call RKItemSlotCast chest
-	/call RKItemSlotCast legs
+	/cast item "Castaway Coat of the Assassin"
+	/cast item "Crypt-Hunter's Shadowscale Leggings"	
+	|/call RKItemSlotCast chest
+	|/call RKItemSlotCast legs
 	/if (${Bool[${Cursor}]} && ${Cursor.Name.Left[9].Equal[Consigned]}) {
-		/i say pulled ${Cursor} out of my pants
+		/docommand /${ChatCommand} "pulled ${Cursor} out of my pants"
 		/autoinv
 	}
+	/doability "Backstab"
 /return FALSE
 
 Sub HideAndSneak
@@ -158,6 +174,7 @@ Sub HideAndSneak
 /return FALSE
 
 Sub RogueDefensives
+	/doability "Backstab"
 	/if (${Me.PctHPs} < 30) /call RKDisc "Nimble Discipline"
 	/if (${Bool[${Macro.Return}]} && ${Macro.Return}) /return TRUE	
 	

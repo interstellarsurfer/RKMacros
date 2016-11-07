@@ -10,7 +10,7 @@ Sub Init_RKPathMovementBase
 	/declare DetourNodes[100,2] float outer | same as path nodes, but used for divergence from the current path
 	/declare CurrentDetourNodeIndex int outer 0	
 
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "StopFollowingPath"
+	/call AddToArray "PreTargetAcquisitionSubs" "StopFollowingPath"
 	/call AddToArray "NonCombatSubs" "UpdateFollowPath"
 /return
 

@@ -19,10 +19,10 @@ Sub Main
 
 	/varset PetSpellName "Shard of Air"
 
-	/varset TargetHpEngagePercentage 100
+
 		
 	/call AddToArray "DetrimentalSpells" "Ruthless Servant Rk. II"
-	|/call AddToArray "DetrimentalSpells" "Rain of Razors"
+	/call AddToArray "DetrimentalSpells" "Rain of Razors"
 	/call AddToArray "DetrimentalSpells" "Fickle Flames"
 	/call AddToArray "DetrimentalSpells" "Spear of Molten Steel"
 	/call AddToArray "DetrimentalSpells" "Bolt of Molten Steel Rk. II"	
@@ -41,7 +41,7 @@ Sub Main
 	/call AddToArray "NonCombatSelfBuffs" "Circle of Embers Rk. II"
 	/call AddToArray "NonCombatSelfBuffs" "Tellurian Bodyguard Rk. II"
 	
-	/call AddToArray "CombatPartyBuffs" "Molten Veil Rk. II"
+	/call AddToArray "CombatTankBuffs" "Molten Veil Rk. II"
 	
 	/call AddToArray "CombatActionSubs" "ExecuteMageCombatActions"
 		
@@ -61,7 +61,7 @@ Sub Main
 Sub ExecuteMageCombatActions
 	/if (${Stick.Active}) /call ClearStickTarget
 	/if (${Me.Pet.Distance} > 130) {
-		/docommand /${ChatCommand} pet's too far away - summoning companion
+		/docommand /${ChatCommand} "pet's too far away - summoning companion"
 		/call RKAACast "Summmon Companion"
 	}
 

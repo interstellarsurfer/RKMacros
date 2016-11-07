@@ -1,0 +1,47 @@
+#include RKBase.inc
+#include RKMeleeBase.inc
+#include RKCasterBase.inc
+
+Sub Main
+	/call Init_RKBase
+	/call Init_RKMeleeBase
+	/call Init_RKCasterBase
+	
+| *** VARIABLE DECLARATIONS
+
+	/varset MaxTargetDistance 5000
+
+	/varset UpperAggroThreshold 100
+	/varset MercBurnThreshold 80
+	/varset InCombatStickToCommander FALSE
+	
+	|/call AddToArray "CombatAbilities" "Kick"	
+
+	/call AddToArray "NonCombatSubs" "NonCombat"	
+	/call AddToArray "PreTargetAcquisitionSubs" "PreTarget"
+	/call AddToArray "CombatActionSubs" "MeleeCombat"
+	
+	/echo Done initializing macro!
+
+| *** INITIALIZATION
+	/echo Starting Box Commander - Melee Macro
+
+| *** MAIN LOOP
+:loop
+	/call Tick
+	/goto :loop
+/return
+
+Sub NonCombat
+	/if (!${Twist} && !${Bool[${Me.Casting.ID}]}) {
+		/if (${DebugMode}) /echo need to twist
+		/twist 1 2 3 4
+	}
+/return FALSE
+
+Sub PreTarget
+/return FALSE
+
+Sub MeleeCombat
+
+/return FALSE

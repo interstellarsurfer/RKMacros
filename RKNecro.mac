@@ -1,3 +1,5 @@
+#Event SnareImmune "#*#Your target is immune to changes in its run speed."
+
 #include RKBase.inc
 #include RKCasterBase.inc
 #include RKPetBase.inc
@@ -12,9 +14,11 @@ Sub Main
 	
 | *** VARIABLE DECLARATIONS
 
+	/declare SnareMode bool outer TRUE
+	/declare ShouldSnare bool outer TRUE	
 	/declare SlowMode bool outer TRUE
 
-	/varset TargetHpEngagePercentage 100
+
 	
 	/call AddToArray "DetrimentalSpells" "Coruscate Bones Rk. II"
 	
@@ -34,6 +38,7 @@ Sub Main
 	/call AddToArray "BurnCombatActionSubs" "ExecuteBurnNecroCombatActions"
 	/call AddToArray "DefensiveActionSubs" "ExecuteDefensiveActions"
 	/call AddToArray "NonCombatSubs" "NecroNonCombatSubs"
+	/call AddToArray "XPEarnedSubs" "ResetSnareMode" 
 
 	/varset SpellMemSlot 12
 	
@@ -45,6 +50,7 @@ Sub Main
 	/call Tick
 	/goto :loop
 /return
+
 
 Sub ExecuteNecroCombatActions
 	/call RKAACast "Reluctant Benevolence"
@@ -69,7 +75,7 @@ Sub ExecutePriorityCombatActions
 			/return TRUE
 		}
 	}
-	/if (!${Target.Buff[Encroaching Darkness].ID}) /call RKAACast "Encroaching Darkness"
+	/if (${ShouldSnare} && !${Target.Buff[Encroaching Darkness].ID}) /call RKAACast "Encroaching Darkness"
 	
 /return FALSE
 
@@ -84,3 +90,12 @@ Sub ExecuteDefensiveActions
 	/if (${Me.PctHPs} < 30) /call RKAACast "Death's Effigy"
 	/if (${Bool[${Macro.Return}]} && ${Macro.Return}) /return TRUE	
 /return FALSE
+
+Sub ResetSnareMode
+	/if (${SnareMode}) /varset ShouldSnare TRUE
+/return FALSE
+
+Sub Event_SnareImmune
+	/varset ShouldSnare FALSE
+/return
+

@@ -1,0 +1,61 @@
+#include RKBase.inc
+#include RKMeleeBase.inc
+#include RKCasterBase.inc
+#include RKHealerBase.inc
+
+Sub Main
+	/call Init_RKBase
+	/call Init_RKMeleeBase
+	/call Init_RKCasterBase
+	/call Init_RKHealerBase
+	
+| *** VARIABLE DECLARATIONS
+
+	/varset MaxTargetDistance 5000
+
+	/varset UpperAggroThreshold 100
+	/varset MercBurnThreshold 80
+	/varset InCombatStickToCommander FALSE
+	
+	/varset EmergencyHealSpell Divine Light
+	/varset EmergencyHealThreshold 50
+	
+	/varset HealSpell Divine Light
+	/varset GroupHeal Word of Vigor
+
+	/varset MercBurnThreshold 100
+
+	/varset TankHoTThreshold 0	
+	/varset SingleTargetHoTThreshold 0
+	
+	/varset TankHealThreshold 85
+	/varset SingleTargetHealThreshold 85
+	/varset GroupHealThreshold 70
+	/varset EmergencyGroupHealThreshold 50
+	
+	|/call AddToArray "CombatAbilities" "Bash"	
+
+	/call AddToArray "PreTargetAcquisitionSubs" "PreTarget"
+	/call AddToArray "CombatActionSubs" "MeleeCombat"
+	
+	/echo Done initializing macro!
+
+| *** INITIALIZATION
+	/echo Feel the wrath of Aftermath faggots.
+
+| *** MAIN LOOP
+:loop
+	/call Tick
+	/goto :loop
+/return
+
+Sub PreTarget
+/return FALSE
+
+Sub MeleeCombat
+	/call RKCast "Yaulp V" ${CurrentTargetId}
+	
+	/if (!${Bool[${Me.Aura[Aura of the Zealot]}]}) /call RKCast "Aura of the Zealot" ${CurrentTargetId}
+	
+/return FALSE
+

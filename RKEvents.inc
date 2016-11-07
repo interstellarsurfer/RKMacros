@@ -1,9 +1,9 @@
 |------------ BOTMode
 
-#Event FollowInvis "#*#FollowInvis#*#"
-#Event FollowCombat "#*#FollowCombat#*#"
-#Event CampInvis "#*#CampInvis#*#"
-#Event CampCombat "#*#CampCombat#*#"
+#Event FollowInvis "#*#Follow me, but stay invis#*#"
+#Event FollowCombat "#*#Okay, follow me#*#"
+#Event CampInvis "#*#Medding for a bit#*#"
+#Event CampCombat "#*#Medding while I pull#*#"
 #Event CampCharacter "#*#CampCharacter#*#"
 #Event CampDesktop "#*#CampDesktop#*#"
 #Event LowManaMedding "#*#medding, you should med#*#"
@@ -14,6 +14,7 @@
 #Event XP "#*#experience!!#*#"
 #Event XP2 "#*#has been slain by#*#"
 #Event XP3 "#*#You have slain#*#"
+#Event XP4 "#*#as your split.#*#"
 #Event GotGroupInvite "#*#invites you to join a group.#*#"
 #Event TaskGranted "#*#you have been assigned the task#*#"
 #Event TaskProgress "#*#' has been updated.#*#"
@@ -35,15 +36,77 @@
 
 |------------ Commands
 
+#Event LoadBuffs "#*#switch to buffs#*#"
+#Event LoadDPS "#*#switch to dps spells#*#"
+#Event ResetMacro "#*#okay, going to kill some shit#*#"
 #Event Say "#*#say: #1#"
+#Event FSay "#*#fs: #1#'"
 #Event SwitchCommanderIrc "<#1#> I'm in charge now"
 #Event TakeThePortal "#*#take the portal#*#"
 #Event TimeToBail "#*#time to bail#*#"
-#Event Attack "#*#assist me with#*#"
+#Event AssistMe "#*#assist me with#*#"
 #Event Burn "#*#burn this guy down#*#"
 #Event Burn2 "#*#burn this guy hard#*#"
 #Event Hail "#*#hail this guy#*#"
 #Event HailInvis "#*#hail this dude#*#"
+
+#Event AssistMe "#*#AssistMe Plz#*#"
+
+
+Sub Event_LoadBuffs
+	/delay 4s !${Me.Casting.ID}
+	/memspellset Buffs
+	/delay 1s
+	/delay 10s !${Window[SpellBookWnd].Open}
+	/docommand /${ChatCommand} "loaded buffs"
+/return TRUE
+
+Sub Event_LoadDPS
+	/delay 4s !${Me.Casting.ID}
+	/memspellset DPS
+	/delay 1s
+	/delay 10s !${Window[SpellBookWnd].Open}
+	/docommand /${ChatCommand} "loaded DPS spells"
+/return TRUE
+
+Sub Event_ResetMacro
+	/docommand /${ChatCommand} "Restarting ${Macro.Name}"
+	/i quit
+	/delay 3s
+	/keypress Ctrl+F12
+	/delay 5
+	/keypress Ctrl+F12
+	/delay 5
+	/keypress Ctrl+F12
+	/delay 5
+	/keypress Ctrl+F12
+/return TRUE
+
+Sub Event_AssistMe
+	/assist ${RKCommander}
+	/delay 1s ${Target.ID}
+	/if (!${Target.ID}) /return FALSE
+
+	/varset CurrentTargetId ${Target.ID}
+	/if (${MarkMainTarget} && ${Group.Leader.ID} == ${Me.ID}) {
+		/gmarknpc 1
+	}
+
+	/echo assist called
+	/varset EngageOutOfCombatNPC TRUE
+
+	/attack on
+	/if (${Me.ID} == ${Group.Leader.ID}) /delay 1s
+	/if (!${IsTank}) /delay 1s
+
+	/if (${IsTank} && ${Me.Pet.ID}) {
+		/pet back
+		/pet attack
+	}
+	
+	/face fast nolook
+	/call SetStickTarget 13
+/return
 
 Sub Event_XP
 	/call ResetMobMode
@@ -57,52 +120,72 @@ Sub Event_XP3
 	/call ResetMobMode
 /return
 
+Sub Event_XP4
+	/call ResetMobMode
+/return
+
 Sub ResetMobMode
-	/if (${Defined[ShouldCheckPartyBuffs]}) /varset ShouldCheckPartyBuffs TRUE
 	/if (${Defined[ShouldCheckTankBuffs]}) /varset ShouldCheckTankBuffs TRUE
 	/if (${Defined[ShouldICharm]} && ${CharmMode}) /varset ShouldICharm TRUE
 
-	/varset MobMode 1
+	/varset CurrentTargetId 0
+	/varset MOBMode ${DefaultMOBMode}
+	/varset EngageOutOfCombatNPC FALSE
 	/call ExecuteArrayOfSubs "XPEarnedSubs"
 /return
 
 Sub Event_Slowed
-	/bandolier Activate Standard
+	|/bandolier Activate Standard
 /return
 
 Sub Event_FollowInvis
 	/call SetBotMode 1
 	/varset CurrentStickTargetId 0
+	/varset SitBetweenCombat FALSE	
 	/if (${Macro.Return}) {
 		/makecamp off
-		/call SetStickTarget ${Spawn[${RKCommander} pc].ID} ${StickDistance}
+		/call SetStickTarget ${RKCommanderId} 5
 	}
+	
+	/i say "following invis"
 /return
 
 Sub Event_CampInvis
+	/echo camping invis
 	/call SetBotMode 2
+	/varset SitBetweenCombat TRUE	
 	/if (${Macro.Return}) {
 		/call ClearStickTarget
-		/makecamp on leash ${MaxTargetDistance} radius 100
+		/makecamp on leash ${MaxTargetDistance} radius 120
 	}
 /return
 
 Sub Event_FollowCombat
+	/echo following combat
 	/call SetBotMode 3
+	/varset SitBetweenCombat FALSE	
 	/varset CurrentStickTargetId 0
+	/varset MaxTargetDistance ${If[${RKCommander.Equal[${Me.Name}]},5000,500]}
+	
 	/if (${Macro.Return}) {
-		/call SetStickTarget ${Spawn[${RKCommander} pc].ID} ${StickDistance}
+		/echo SetStickTarget FollowCombat
+		/call SetStickTarget ${RKCommanderId} 5
 		/call ExecuteArrayOfSubs "SwitchToCombatModeSubs"
 		/makecamp off
 	}
+	
+	/i say "following combat"
 /return
 
 Sub Event_CampCombat
+	/echo camping combat
 	/call SetBotMode 4
+	/varset SitBetweenCombat TRUE
+	/varset MaxTargetDistance 700
 	/if (${Macro.Return}) {
-		/call ClearStickTarget
 		/call ExecuteArrayOfSubs "SwitchToCombatModeSubs"
-		/makecamp on leash ${MaxTargetDistance} radius 100
+		/call ClearStickTarget
+		/makecamp on leash ${MaxTargetDistance} radius 80	
 	}
 /return
 
@@ -113,6 +196,7 @@ Sub SetBotMode(int botMode)
 	/if (${Twist}) /twist off
 	/varset BOTMode ${botMode}
 	
+	/return FALSE
 	/declare botModeName string inner
 
 	|0 = nothing / medding, 1 = follow & prevent action, 2 = set up camp & prevent action, 3 = follow & attack, 4 = set up camp & attack, 5 = manual piloting
@@ -123,7 +207,7 @@ Sub SetBotMode(int botMode)
 	/if (${BOTMode} == 4) /varset botModeName set up camp & attack
 	/if (${BOTMode} == 5) /varset botModeName manual piloting
 	
-	/docommand /${ChatCommand} Changed BOTMode to ${botMode} - ${botModeName}
+	|/echo "Changed BOTMode to ${botMode} - ${botModeName}"
 /return TRUE
 
 Sub Event_Attack
@@ -132,21 +216,27 @@ Sub Event_Attack
 		/assist ${RKCommander}
 		/delay 5
 	}
-	/if (${HideCorpsesOnAttack}) /hidecorpse all
+	/if (${HideCorpsesOnAttack}) /hidecorpse always
 	/if (!${Target.ID}) /return
-	/varset MobMode 1
+	/varset MOBMode ${DefaultMOBMode}
 
-	/call ExecuteArrayOfSubs "AssistCalledSubs"
+	/attack on
+	
+	/if (!${InCombatStickToCommander}) {
+		/if (${IsTank} || ${Target.PctHPs} < 100) {
+			/call SetStickTarget ${Target.ID} 5
+		}
+	}
 /return
 
 Sub Event_Burn
 	/call RKAACast "Intensity of the Resolute"
-	/varset MobMode 2
+	/varset MOBMode 2
 /return
 
 Sub Event_Burn2
 	/call RKAACast "Intensity of the Resolute"
-	/varset MobMode 3
+	/varset MOBMode 3
 /return
 
 Sub Event_Hail
@@ -164,7 +254,17 @@ Sub Event_HailInvis
 	/hail
 /return
 
+Sub Event_FSay(eventText,sayText)
+	/echo saying ${sayText}
+	/call DropInvis
+	/assist ${RKCommander}
+	/delay 1s
+	/say ${sayText}
+	/delay 5
+/return
+
 Sub Event_Say(eventText,sayText)
+	/echo saying ${sayText}
 	/call DropInvis
 	/assist ${RKCommander}
 	/delay 1s
@@ -174,7 +274,9 @@ Sub Event_Say(eventText,sayText)
 
 Sub SwitchCommander(string commanderName)
 	/if (${commanderName.Left[1].Compare[ ]}<0) /varset commanderName ${commanderName.Right[-2].Left[-1]}
+	/if (${Bool[${Raid.Members}]}) /return
 	/varset RKCommander ${commanderName}
+	/makeleader ${commanderName}
 	/varset BOTMode 3
 	/call ClearStickTarget
 /return
@@ -190,7 +292,6 @@ Sub Event_CampCharacter
 		/delay 1s
 	}
 	/camp
-	/endmac
 /return
 
 Sub Event_CampDesktop
@@ -219,7 +320,7 @@ Sub Event_TimeToBail
 /return
 
 Sub Event_TaskGranted
-	/i say Got the quest
+	/docommand /${ChatCommand} "Got the quest"
 /return
 
 Sub TrimName(string name)
@@ -303,16 +404,16 @@ Sub Event_LanguageSetToElvish
 /return FALSE
 
 Sub Event_Camping
-	/i say Camping, ending macro.
+	/docommand /${ChatCommand} "Camping, ending macro."
 	/makecamp off
 	/endmac
 /return FALSE
 
 Sub Event_ReceivedTell(eventText, player, language, message)
 	/if (${Me.Pet.ID} && ${Me.Pet.Name.Equal[${player}]}) /return FALSE
-	/i say tell from ${player} in ${language}: ${message}
+	/docommand /${ChatCommand} "tell from ${player} in ${language}: ${message}"
 /return FALSE
 
 Sub Event_TaskProgress
-	/i say got quest update.
+	/docommand /${ChatCommand} "got quest update."
 /return FALSE

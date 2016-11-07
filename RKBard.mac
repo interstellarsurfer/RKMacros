@@ -8,7 +8,9 @@ Sub Main
 	/call Init_RKBase
 	/call Init_RKPetBase
 	/call Init_RKMeleeBase
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "BardPreCombat"
+	/call AddToArray "CombatActionSubs" "BardCombat"
+	/call AddToArray "BurnCombatActionSubs" "BardBurn"
+	/call AddToArray "PreTargetAcquisitionSubs" "BardPreCombat"
 	/call Init_RKCrowdControlBase
 	/call AddToArray "NonCombatSubs" "BardNonCombatSubs"
 	/call Init_RKCasterBase
@@ -17,23 +19,21 @@ Sub Main
 
 	/varset StickDistance 7
 	/varset StickFlags behind	
-	/varset SitBetweenCombat FALSE
+	/varset SitBetweenCombat TRUE
 
 	/declare OverhasteAura bool outer TRUE
 
 	/varset CCMode FALSE
-	/varset MultipleTargetMez Wave of Quietude
+	/varset AEMezSpell Wave of Torpor Rk. II
 	/varset SingleTargetMez Slumber of Silisia Rk. II
 	/varset SingleTargetMezLevelCap 108
 
 	/varset CharmMode FALSE
-	/varset CharmSpell "Voice of Motlak"
-	/varset CharmSpellLevelCap 98
+	/varset CharmSpell Voice of Silisia Rk. II
+	/varset CharmSpellLevelCap 103
 
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "CheckTwist"	
+	/call AddToArray "CombatActionSubs" "CheckTwist"	
 	/call AddToArray "DefensiveActionSubs" "BardDefensives"	
-	/call AddToArray "CombatActionSubs" "BardCombat"
-	/call AddToArray "BurnCombatActionSubs" "BardBurn"
 	/call AddToArray "InvisModeSubs" "PeriodicGroupInvis"
 	
 	/declare AESlowSong string outer Protan's Melodic Binding	
@@ -88,11 +88,20 @@ Sub BardPreCombat
 Sub BardNonCombatSubs
 	/if (${LowManaMed}) /twist off
 
-	/if (${OverhasteAura}) {
-		/if (!${Bool[${Me.Aura[Aura of Va'Ker]}]}) {
+	/if (!${Me.XTarget[1].ID) {
+		/if (!${Zone.ShortName.Equal[brotherisland]}) {
 			/twist off
-			/delay 10s ${Me.SpellReady[Aura of Va'Ker]}
-			/call RKCast "Aura of Va'Ker" ${Me.ID}
+			/stopcast
+		}
+	}
+	
+	/if (!${Me.Buff[Symphony of Battle].ID}) /cast item "Rapier of Somber Notes"
+
+	/if (${OverhasteAura}) {
+		/if (!${Bool[${Me.Aura[Aura of Maetanrus Rk. II]}]}) {
+			/twist off
+			/delay 10s ${Me.SpellReady[Aura of Maetanrus Rk. II]}
+			/call RKCast "Aura of Maetanrus Rk. II" ${Me.ID}
 			/delay 6s
 			/twist off
 			/return TRUE
@@ -123,14 +132,16 @@ Sub BardCombat
 	|/call CheckAESlow
 	/call RKItemSlotCast chest
 	
+	/echo bard combat - current target : ${CurrentTargetId}
+	
 	/if (${Me.GemTimer[${Me.Gem[Silisia's Lively Crescendo Rk. II]}]} == 0) {
 		/call RKCast "Silisia's Lively Crescendo Rk. II" ${CurrentTargetId}
-		/return TRUE
+		|/return TRUE
 	}
 	
 	/call RKAACast "Boastful Bellow" ${CurrentTargetId}
 	/call RKAACast "Selo's Kick" ${CurrentTargetId}
-	/call RKAACast "Vainglorious Shout" ${CurrentTargetId}	
+	/call RKAACast "Vainglorious Shout" ${CurrentTargetId}
 
 	/call RKAACast "Lyrical Prankster"
 	/call RKAACast "Song of Stone"

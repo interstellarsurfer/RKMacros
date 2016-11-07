@@ -1,4 +1,6 @@
 Sub Init_RKHealerBase
+	/declare HealMode bool outer TRUE
+
 	/declare HealSpell string outer
 	/declare TankHealThreshold int outer 90
 	/declare SingleTargetHealThreshold int outer 80
@@ -19,65 +21,94 @@ Sub Init_RKHealerBase
 	/declare GroupHoT[7] int outer 0
 	/declare GroupHoTPet[7] int outer 0
 
-	/declare CurrentGroupHealthPercentage float outer
+	/declare LowestID int outer ${Me.ID}
+	
+	/declare GroupHealthPercentage float outer
 
-	/call AddToArray "PreTargetAcquisitionCombatActionSubs" "ExecuteHealing"
-
+	/call AddToArray "NonCombatSubs" "ExecuteHealing"
+	/call AddToArray "PreTargetAcquisitionSubs" "ExecuteHealing"
+	
 	/echo Done initializing healer base!
 /return
 
 Sub ExecuteHealing
 	/if (${DebugMode}) /echo ExecuteHealing
-	/if (${BOTMode} < 3 || ${BOTMode} == 5) {
+	/if (${BOTMode} < 3) {
 		/if (${DebugMode}) /echo early escape from ExecuteHealing due to BOTMode = ${BOTMode}
 		/return FALSE
 	}
 
+	/call CalculateGroupHealth
+
+	/if (!${HealMode}) /return FALSE
+
 	/if (${Me.Moving}) /return FALSE
 	
-	/call CheckSingleTargetHealth ${Group.MainTank.ID} ${EmergencyHealThreshold} ${SingleTargetHoTThreshold} "${EmergencyHealSpell}"
-	/if (${Macro.Return}) {
-		/if (${DebugMode}) /echo need to emergency heal Main Tank
-		|/return TRUE
-	}
-	
-	/call CheckSingleTargetHealth ${Group.MainTank.ID} ${TankHealThreshold} ${SingleTargetHoTThreshold}	"${HealSpell}"
-	/if (${Macro.Return}) {
-		/if (${DebugMode}) /echo need to heal Main Tank
-		|/return TRUE
+	/if (${TankId} != 0 && ${Spawn[id ${TankId}].ID}) {
+		/call CheckSingleTargetHealth ${TankId} ${EmergencyHealThreshold} ${SingleTargetHoTThreshold} "${EmergencyHealSpell}"
+		/if (${Macro.Return}) {
+			/if (${DebugMode}) /echo Emergency healing Tank: ${Spawn[id ${TankId}]}
+			/return FALSE
+		}
+		
+		/call CheckSingleTargetHealth ${TankId} ${TankHealThreshold} ${SingleTargetHoTThreshold}	"${HealSpell}"
+		/if (${Macro.Return}) {
+			/if (${DebugMode}) /echo Healing Tank: ${Spawn[id ${TankId}]}
+			/return FALSE
+		}
 	}
 	
 	/if (${GroupHealThreshold} <= 0 && ${EmergencyGroupHealThreshold} <= 0) /return FALSE
 	
 	/call CheckGroupHealth
-	/if (${Macro.Return}) {
-		/if (${DebugMode}) /echo need to heal Group Tank
-		|/return TRUE
-	}
+	/if (${Macro.Return} && ${DebugMode}) /echo need to heal Group
 
 	/call GetLowestHPGroupMember
 	/call CheckSingleTargetHealth ${Macro.Return} ${SingleTargetHealThreshold} ${SingleTargetHoTThreshold} "${HealSpell}"
 	/if (${Macro.Return}) {
-		/if (${DebugMode}) /echo need to heal a group member
-		|/return TRUE
+		/if (${DebugMode}) /echo need to heal a group member ${Spawn[id ${LowestID}].Name} 
+		/return FALSE
+	} 
+
+	/if (${Target.Type.Equal[PC]}) {
+		/if (${DebugMode}) /echo Checking Target HP
+		/call CheckSingleTargetHealth ${Target.ID} ${EmergencyHealThreshold} ${SingleTargetHoTThreshold} "${EmergencyHealSpell}"
+		/if (${Macro.Return}) {
+			/if (${DebugMode}) /echo Emergency healing Target: ${Spawn[id ${Target.ID}]}
+			/return FALSE
+		}
+		
+		/call CheckSingleTargetHealth ${Target.ID} 95 0	"${HealSpell}"
+		/if (${Macro.Return}) {
+			/if (${DebugMode}) /echo Healing Target: ${Spawn[id ${Target.ID}]}
+			/return FALSE
+		}
+		
+		/call CheckSingleTargetHealth ${Target.ID} 95 ${SingleTargetHoTThreshold} "${HealSpell}"
+		/if (${Macro.Return}) {
+			/if (${DebugMode}) /echo Healing Target: ${Spawn[id ${Target.ID}]}
+			/return FALSE
+		}
 	}
-/return ${Macro.Return}
+
+	
+/return FALSE
 
 Sub GetLowestHPGroupMember
 	/if (${DebugMode}) /echo GetLowestHPGroupMember
 	/declare lowestLevel int local 100
-	/declare lowestID int local ${Me.ID}
 	/declare i int local 
 	/for i 0 to ${Group.Members}
 		/if (${Bool[${Group.Member[${i}].Spawn}]} && ${Group.Member[${i}].Spawn.PctHPs} < ${lowestLevel}) {
 			/varset lowestLevel ${Group.Member[${i}].PctHPs}
-			/varset lowestID ${Group.Member[${i}].ID}
+			/varset LowestID ${Group.Member[${i}].ID}
 		}
 	/next i
-/return ${lowestID}
+	/if (${DebugMode}) /echo Lowest HP member is ${Spawn[id ${LowestID}].Name} with ${Spawn[id ${LowestID}].PctHPs}% hps
+/return ${LowestID}
 
 Sub CheckSingleTargetHealth(int targetId, int healThreshold, int HoTThreshold, string healSpell)
-	/if (${DebugMode}) /echo CheckSingleTargetHealth ${targetId} ${healThreshold} ${HoTThreshold}
+	/if (${DebugMode}) /echo CheckSingleTargetHealth ${targetId} - ${Spawn[id ${targetId}].CleanName} - ${healThreshold} ${HoTThreshold}
 	
 	/declare needToHeal bool local FALSE
 	
@@ -130,34 +161,38 @@ Sub CheckGroupHealth
 
 	/if (!${Bool[${Group}]}) /return FALSE
 	
-	/declare CurrentGroupHealth int local 0
-	
-	/declare i int local 
-	/declare groupMemberCount int local
-	/for i 0 to ${Group.Members}
-		/if (${Group.Member[${i}].PctHPs} != 0) {
-			/varcalc CurrentGroupHealth ${CurrentGroupHealth} + ${Group.Member[${i}].PctHPs}
-			/varcalc groupMemberCount ${groupMemberCount} + 1
-		}
-	/next i
-	/varcalc CurrentGroupHealthPercentage ${CurrentGroupHealth} / ${groupMemberCount}
-	/if (${DebugMode}) /echo Current group health % is ${CurrentGroupHealthPercentage}
+	/call CalculateGroupHealth
 	
 	/if (${Bool[${EmergencyGroupHeal}]}) {
-		/if (${CurrentGroupHealthPercentage} < ${EmergencyGroupHealThreshold}) {
-			/echo Group Health % = ${CurrentGroupHealthPercentage} casting Emergency Heal - ${EmergencyGroupHeal}
+		/if (${GroupHealthPercentage} < ${EmergencyGroupHealThreshold}) {
+			/echo Group Health % = ${GroupHealthPercentage} casting Emergency Heal - ${EmergencyGroupHeal}
 			/call RKCast "${EmergencyGroupHeal}" ${Me.ID}
 			/if (${Macro.Return}) /return TRUE
 		}
 	}
 
 	/if (${Bool[${GroupHeal}]}) {
-		/if (${CurrentGroupHealthPercentage} < ${GroupHealThreshold}) {
-			/echo Group Health % = ${CurrentGroupHealthPercentage} casting Group Heal - ${GroupHeal}
+		/if (${GroupHealthPercentage} < ${GroupHealThreshold}) {
+			/echo Group Health % = ${GroupHealthPercentage} casting Group Heal - ${GroupHeal}
 			/call RKCast "${GroupHeal}" ${Me.ID}
 			/if (${Macro.Return}) /return TRUE
 		}
 	}
+/return FALSE
+
+Sub CalculateGroupHealth
+	/declare currentGroupHealth int local 0
+	/if (!${Bool[${Group}]}) /return ${Me.PctHPs}
+	/declare i int local 
+	/declare groupMemberCount int local
+	/for i 0 to ${Group.Members}
+		/if (${Group.Member[${i}].PctHPs} != 0) {
+			/varcalc currentGroupHealth ${currentGroupHealth} + ${Group.Member[${i}].PctHPs}
+			/varcalc groupMemberCount ${groupMemberCount} + 1
+		}
+	/next i
+	/varcalc GroupHealthPercentage ${currentGroupHealth} / ${groupMemberCount}
+	/if (${DebugMode}) /echo Current group health % is ${GroupHealthPercentage}
 /return FALSE
 
 Sub Event_HOT_Landed_Self
