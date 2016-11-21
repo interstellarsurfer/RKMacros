@@ -28,10 +28,10 @@ Sub CheckPosition
 
 			/if (${Me.XTarget[${i}].Distance} > 25) {
 				/if (${DebugMode}) /echo Target is too far, sticking to them for a sec
-				/stick id ${Me.XTarget[${i}].ID} ${StickDistance}
-				/delay 1s
-				/stick off
-				/delay 2
+				/call SetStickTarget ${Me.XTarget[${i}].ID} ${StickDistance} ${StickFlags}
+				/delay 1s ${Me.XTarget[${i}].Distance} < 25
+				/call ClearStickTarget
+				/delay 1
 				/call FaceAECentroid
 			}
 
@@ -72,7 +72,7 @@ Sub CheckPosition
 				} else /if (${randomValue} == 1) {
 					/if (${DebugMode}) /echo rand movement strafe right
 					/if (${Stick.Active}) {
-						/stick off
+						/call ClearStickTarget
 						/if (${DebugMode}) /echo stick off 5
 					}
 					/keypress e hold
@@ -85,7 +85,7 @@ Sub CheckPosition
 				} else {
 					/if (${DebugMode}) /echo rand movement strafe left
 					/if (${Stick.Active}) {
-						/stick off
+						/call ClearStickTarget
 						/if (${DebugMode}) /echo stick off 5
 					}
 					/keypress q hold
@@ -113,7 +113,7 @@ Sub CheckPosition
 				/delay 2
 				/return FALSE
 			} else {
-				/if (${InCombatStickToCommander}) {
+				/if (${InCombatStickToCommander} || ${BOTMode} == 1) {
 					/if (${BOTMode} !=2 && ${BOTMode} !=4) {
 						/if (!${Stick.Active}) {
 							/if (${DebugMode}) /echo SetStickTarget 7
@@ -260,7 +260,10 @@ Sub SetStickTarget(int targetId, int distance)
 	}
 	
 	/varset CurrentStickTargetId ${targetId}
-	/if (${Stick.Active}) /stick off
+	/if (${Stick.Active}) {
+		/stick off
+		/delay 1
+	}
 	/stick id ${targetId} ${StickFlags} ${distance}
 	/echo stuck to ${targetId}
 	
@@ -287,14 +290,14 @@ Sub CheckCommanderFollow
 	}
 	
 	/if (${Bool[${Me.XTarget[1].ID}]}) {
-		/if (${InCombatStickToCommander} || ${Spawn[id ${TankId}].Distance} > 30) {
+		/if (${InCombatStickToCommander} || ${Spawn[id ${TankId}].Distance} > 30 || ${BOTMode} == 1) {
 			/if (!${Stick.Active}) {
 				/if (${DebugMode}) /echo SetStickTarget 2
 				/call SetStickTarget ${RKCommanderId} 5
 			}
 		} else {
 			/if (${Stick.Active} && ${CurrentStickTargetId} == ${RKCommanderId}) {
-				/stick off 
+				/call ClearStickTarget
 				/if (${DebugMode}) /echo stick off 8
 			}
 		}

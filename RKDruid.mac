@@ -141,7 +141,7 @@ Sub CheckCheetah
 	/if (${Me.Buff[Communion of the Cheetah].ID} && ${Me.Buff[Communion of the Cheetah].Duration} > 8) /return FALSE
 	/call RKAACast "Communion of the Cheetah" ${CurrentTargetId}
 	/delay 5
-	/call RKAACast "Innate Camouflage"
+	/if (${BOTMode} == 1 || ${BOTMode} == 3) /call RKAACast "Innate Camouflage"
 /return FALSE
 	
 Sub ExecuteDefensiveActions

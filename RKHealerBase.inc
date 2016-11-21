@@ -32,7 +32,8 @@ Sub Init_RKHealerBase
 /return
 
 Sub ExecuteHealing
-	/if (${DebugMode}) /echo ExecuteHealing
+	|/if (${DebugMode}) 
+	/echo ExecuteHealing
 	/if (${BOTMode} < 3) {
 		/if (${DebugMode}) /echo early escape from ExecuteHealing due to BOTMode = ${BOTMode}
 		/return FALSE
@@ -104,6 +105,7 @@ Sub GetLowestHPGroupMember
 			/varset LowestID ${Group.Member[${i}].ID}
 		}
 	/next i
+	/if (${DebugMode}) /echo Lowest HP member is ${Spawn[id ${LowestID}].Name} with ${Spawn[id ${LowestID}].PctHPs}% hps
 	/if (${DebugMode}) /echo Lowest HP member is ${Spawn[id ${LowestID}].Name} with ${Spawn[id ${LowestID}].PctHPs}% hps
 /return ${LowestID}
 

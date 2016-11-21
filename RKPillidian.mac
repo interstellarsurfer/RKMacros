@@ -25,18 +25,18 @@ Sub Main
 	/varset UpperAggroThreshold 100
 	/varset SpellMemSlot 10
 
-	/varset HealSpell Daggerthorn Rush Rk. II
-	/varset TankHealThreshold 80
-	/varset SingleTargetHealThreshold 60
+	/varset HealSpell Daggerthorn Rush Rk. III
+	/varset TankHealThreshold 90
+	/varset SingleTargetHealThreshold 80
 	
-	/varset EmergencyHealSpell Resurgence Rk. II
-	/varset EmergencyHealThreshold 60
+	/varset EmergencyHealSpell Resurgence Rk. III
+	/varset EmergencyHealThreshold 70
 	
-	/varset GroupHeal Lunasoothe Rk. II
-	/varset GroupHealThreshold 90
+	/varset GroupHeal Lunasoothe Rk. III
+	/varset GroupHealThreshold 93
 	
 	/varset EmergencyGroupHeal Lunasoothe Rk. II
-	/varset EmergencyGroupHealThreshold 60
+	/varset EmergencyGroupHealThreshold 85
 	
 	/call AddToArray "InvisModeSubs" "CastGroupInvis"
 	/call AddToArray "NonCombatSubs" "DruidNonCombat"
@@ -45,22 +45,22 @@ Sub Main
 	/call AddToArray "DefensiveActionSubs" "ExecuteDefensiveActions"
 	/call AddToArray "BurnCombatActionSubs" "DruidBurnActions"
 
-	/call AddToArray "DetrimentalSpells" "Crush of Ro Rk. II"				
-	/call AddToArray "DetrimentalSpells" "Moonbright Frost Rk. II"					
-	/call AddToArray "DetrimentalSpells" "Horde of Aculeids Rk. II"			
-	/call AddToArray "DetrimentalSpells" "Nature's Fiery Wrath Rk. II"	
-	/call AddToArray "DetrimentalSpells" "Remote Sunflash Rk. II"		
-	/call AddToArray "DetrimentalSpells" "Summer Sunfire Rk. II"		
-	/call AddToArray "DetrimentalSpells" "Dichotomic Winds"
+	/call AddToArray "DetrimentalSpells" "Consuming Sunray Rk. III"				
+	/call AddToArray "DetrimentalSpells" "Argent Moonbeam Rk. III"					
+	|/call AddToArray "DetrimentalSpells" "Horde of Aculeids Rk. II"			
+	|/call AddToArray "DetrimentalSpells" "Nature's Fiery Wrath Rk. II"	
+	|/call AddToArray "DetrimentalSpells" "Remote Sunflash Rk. II"		
+	|/call AddToArray "DetrimentalSpells" "Summer Sunfire Rk. II"		
+	|/call AddToArray "DetrimentalSpells" "Dichotomic Winds"
 	
-	|/call AddToArray "CombatTankBuffs" "Pellicle of the Reptile Rk. II"
+	||/call AddToArray "CombatTankBuffs" "Pellicle of the Reptile Rk. II"
 	
-	/call AddToArray "NonCombatSelfBuffs" "Legacy of Daggerspurs Rk. II"	
-	/call AddToArray "NonCombatSelfBuffs" "Mystical Ways Rk. II"		
-	/call AddToArray "CombatSelfBuffs" "Mystical Ways Rk. II"			
+	|/call AddToArray "NonCombatSelfBuffs" "Legacy of Daggerspurs Rk. II"	
+	|/call AddToArray "NonCombatSelfBuffs" "Mystical Ways Rk. II"		
+	|/call AddToArray "CombatSelfBuffs" "Mystical Ways Rk. II"			
 	
-	/call AddToArrayWithUniqueName "NonCombatSelfBuffs" "Corpsetender's Unity Rk. II" "Daggerspur Coat Rk. II"	
-	/call AddToArrayWithUniqueName "NonCombatSelfBuffs" "Corpsetender's Unity Rk. II" "Mask of the Corpsetender Rk. II"		
+	|/call AddToArrayWithUniqueName "NonCombatSelfBuffs" "Corpsetender's Unity Rk. II" "Daggerspur Coat Rk. II"	
+	|/call AddToArrayWithUniqueName "NonCombatSelfBuffs" "Corpsetender's Unity Rk. II" "Mask of the Corpsetender Rk. II"		
 	
 	
 | *** INITIALIZATION

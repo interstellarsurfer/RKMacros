@@ -22,7 +22,7 @@ Sub Main
 	/call Init_RKPetBase
 	/call AddToArray "PreTargetAcquisitionSubs" "EnchanterPreCombat"
 	/call Init_RKCrowdControlBase
-
+	/call AddToArray "CombatActionSubs" "EnchanterCombatActions"
 	/call Init_RKCasterBase
 
 | *** VARIABLE DECLARATIONS
@@ -40,8 +40,8 @@ Sub Main
 	/varset CharmMode TRUE
 	/varset CharmSpell Enticer's Command Rk. II
 	/varset CharmSpellLevelCap 104
-
-	/if (${Group.MainTank.ID} != ${Group.MainAssist.ID}) /varset CCMode FALSE
+	/varset CCMode TRUE
+	/if (${Me.ID} == ${Group.MainAssist.ID}) /varset CCMode FALSE
 	
 	/varset AEMezSpell Perilous Bafflement Rk. III
 	/varset SingleTargetMez Chaotic Bewildering Rk. II
@@ -55,7 +55,6 @@ Sub Main
 	
 	/call AddToArray "BurnCombatActionSubs" "EnchanterBurnActions"
 	/call AddToArray "DefensiveActionSubs" "EnchanterDefensiveActions"		
-	/call AddToArray "CombatActionSubs" "EnchanterCombatActions"
 	
 	/declare SlowSpell string outer Dreary Deeds
 
@@ -83,6 +82,7 @@ Sub Main
 /return
 
 Sub EnchanterBurnActions
+	/if (${Me.Moving}) /return FALSE
 	/call RKDebuffCast "Decree of Tashan Rk. III" "Decree of Tashan Rk. III" ${CurrentTargetId}
 	/if (${Macro.Return}) /return FALSE
 	/if (${Bool[${Target.Buff}]} && !${Bool[${Target.Slowed}]}) {
@@ -93,7 +93,7 @@ Sub EnchanterBurnActions
 	/call RKDebuffCast "Mind Storm Rk. III" "Mind Storm Rk. III" ${CurrentTargetId}	
 	/if (${Macro.Return}) /return FALSE
 
-	/call RKDebuffCast "Drown Rk. III" ${CurrentTargetId}
+	/call RKDebuffCast "Drown Rk. II" "Drown Rk. II" ${CurrentTargetId}
 	/if (${Macro.Return}) /return FALSE
 	
 	/call RKAACast "Illusions of Grandeur" ${CurrentTargetId}
@@ -120,7 +120,20 @@ Sub EnchanterBurnActions
 /return FALSE
 
 Sub EnchanterCombatActions
+	/if (${Me.Moving}) /return FALSE
+	/if (!${Me.AltAbility[Glyph of Arcane Secrets II]} && ${Me.AAPoints} > 10) /alt buy 7017
+	/if (!${Me.Buff[Glyph of Lost Secrets].ID} && ${Me.AltAbility[Glyph of Arcane Secrets II]}) /alt act 7017
 
+	/if (${Target.PctHPs} > 60) {
+		/call RKDebuffCast "Mind Storm Rk. III" "Mind Storm Rk. III" ${CurrentTargetId}	
+		/if (${Macro.Return}) /return FALSE
+	}
+	
+	/if (${Target.PctHPs} > 70) {
+		/call RKDebuffCast "Drown Rk. II" "Drown Rk. II" ${CurrentTargetId}
+		/if (${Macro.Return}) /return FALSE
+	}
+	
 	/if (${Me.XTarget[3].ID} && ${CCMode}) {
 		/call RKCast "Perilous Bafflement Rk. III" ${CurrentTargetId}
 		/if (${Macro.Return}) /return FALSE
@@ -225,7 +238,7 @@ Sub EnchanterAEMez
 	
 	/if (${Me.AltAbilityReady[Beam of Slumber]}) {
 		/echo casting Beam of Slumber at Y: ${AECentroidY} and X: ${AECentroidX}
-		/squelch /stick off
+		/call ClearStickTarget
 		/call FaceAECentroid
 		/delay 5
 		/call RKAACast "Beam of Slumber"
@@ -234,7 +247,7 @@ Sub EnchanterAEMez
 
 	/if (FALSE && ${Me.AltAbilityReady[Scintillating Beam]}) {
 		/echo casting Scintillating Beam at Y: ${AECentroidY} and X: ${AECentroidX}
-		/squelch /stick off
+		/call ClearStickTarget
 		/call FaceAECentroid
 		/delay 5
 		/call RKAACast "Scintillating Beam" ${CurrentTargetId}
@@ -263,8 +276,8 @@ Sub CheckAuras
 		}
 	}
 
-	/if (!${Bool[${Me.Aura[Enticer's Aura Rk. II]}]}) {
-		/call RKMemCast "Enticer's Aura Rk. II" ${Me.ID}
+	/if (!${Bool[${Me.Aura[Enticer's Aura Rk. III]}]}) {
+		/call RKMemCast "Enticer's Aura Rk. III" ${Me.ID}
 		/if (${Macro.Return}) /return TRUE
 	}
 /return FALSE

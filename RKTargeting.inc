@@ -136,66 +136,13 @@ Sub GetMainAssistTargetID
 	/declare spawnIndex int local
 	
 	/if (!${Bool[${Me.XTarget[1].ID}]}) {			
-		/if (${DebugMode}) /echo out of combat pull
-
-		/if (!${PullMode}) {
-			/if (${DebugMode}) /echo early pull escape
+		/call GetPullTarget
+		/if (${Macro.Return}) {
+			/return ${PullTargetId}
+		} else {
 			/return FALSE
 		}
-		
-		/if (${DebugMode}) /echo looking at priority targets
-		/for i 1 to ${PriorityTargets.Size}
-			/for spawnIndex 1 to 3
-				/if (${Bool[${PriorityTargets[${i}]}]}) {
-					/if (${DebugMode}) /echo evaluating PriorityTarget - ${PriorityTargets[${i}]}
-					/varset PullTargetEvaluationId ${NearestSpawn[${spawnIndex}, NPC radius 5000 ${PriorityTargets[${i}]}].ID}
-					/if (${PullTargetEvaluationId}) {
-						/call ValidateTarget ${PullTargetEvaluationId}
-						/if (${Macro.Return}) {
-							/if (${DebugMode}) /echo Found PriorityTarget - ${PriorityTargets[${i}]}
-							/varset PullTargetDistance ${Spawn[id ${PullTargetEvaluationId}].Distance}
-							/varset PullTargetId ${PullTargetEvaluationId}
-							/return ${PullTargetId}
-						}
-					}
-				}
-			/next spawnIndex
-		/next i
 
-		/if (${DebugMode}) /echo looking at LOS targets		
-		/call GetLOSPullTargetId
-		/if (${Macro.Return}) {
-			/if (${PullTargetId} != 0 && ${Spawn[id ${PullTargetId}].Distance} < 5000) {
-				|/if (${DebugMode}) 
-				/if (${DebugMode}) /echo returning targetId ${PullTargetId}
-				/varset PullTargetDistance ${Spawn[id ${PullTargetId}].Distance}
-				/varset PullTargetId ${PullTargetId}
-				/return ${PullTargetId}
-			}
-		}
-			
-		/if (${DebugMode}) /echo looking at pull targets			
-		/for i 1 to ${PullTargets.Size}
-			/if (${Bool[${PullTargets[${i}]}]}) {
-				/for spawnIndex 1 to 3
-					/if (${DebugMode}) /echo evaluating pull target ${PullTargets[${i}]}
-					/varset PullTargetEvaluationId ${NearestSpawn[${spawnIndex}, NPC radius ${PullTargetDistance} ${PullTargets[${i}]}].ID}
-					/call ValidateTarget ${PullTargetEvaluationId}
-					/if (${Macro.Return}) {
-						/if (${PullTargetEvaluationId} && ${Spawn[id ${PullTargetEvaluationId}].Distance} < ${PullTargetDistance}) {
-							/if (${DebugMode}) /echo setting PullTargetEvaluationId to ${PullTargetEvaluationId} at distance ${Spawn[id ${PullTargetEvaluationId}].Distance}
-							/varset PullTargetDistance ${Spawn[id ${PullTargetEvaluationId}].Distance}
-							/varset PullTargetId ${PullTargetEvaluationId}
-						}
-					}
-				/next spawnIndex
-			}
-		/next i
-					
-		/if (${DebugMode}) /echo GetMainAssistTargetID - Got target ${PullTargetId}
-		/call SelectNewTarget ${PullTargetId}
-
-		/return ${PullTargetId}
 	}
 	
 	/declare lowestHPPct int local 101
@@ -218,38 +165,100 @@ Sub GetMainAssistTargetID
 	
 	/if (${lowestHPID}) {
 		/call SelectNewTarget ${lowestHPID}
-		/if (${Macro.Return}) {
-			/call AddToIntArray "BadTargetIds" ${lowestHPID}
-			/return ${lowestHPID}
+		/if (${Macro.Return}) /return ${lowestHPID}
+	}
+/return FALSE
+
+Sub GetPullTarget
+	|/if (${DebugMode}) 
+	/echo Get Pull Target
+
+	/declare i int local
+	/declare spawnIndex int local
+	
+	/if (!${PullMode}) {
+		/if (${DebugMode}) /echo early pull escape
+		/return FALSE
+	}
+	
+	|/if (${DebugMode}) 
+	/echo looking at priority targets
+	/for i 1 to ${PriorityTargets.Size}
+		/for spawnIndex 1 to 3
+			/if (${Bool[${PriorityTargets[${i}]}]}) {
+				/if (${DebugMode}) /echo evaluating PriorityTarget - ${PriorityTargets[${i}]}
+				/varset PullTargetEvaluationId ${NearestSpawn[${spawnIndex}, NPC radius 5000 ${PriorityTargets[${i}]}].ID}
+				/if (${PullTargetEvaluationId}) {
+					/call ValidateTarget ${PullTargetEvaluationId}
+					/if (${Macro.Return}) {
+						/if (${DebugMode}) /echo Found PriorityTarget - ${PriorityTargets[${i}]}
+						/varset PullTargetDistance ${Spawn[id ${PullTargetEvaluationId}].Distance}
+						/varset PullTargetId ${PullTargetEvaluationId}
+						/return ${PullTargetId}
+					}
+				}
+			}
+		/next spawnIndex
+	/next i
+
+	|/if (${DebugMode}) 
+	/echo looking at LOS targets		
+	/call GetLOSPullTargetId
+	/if (${Macro.Return}) {
+		/if (${PullTargetId} != 0 && ${Spawn[id ${PullTargetId}].Distance} < 5000) {
+			|/if (${DebugMode}) 
+			/if (${DebugMode}) /echo returning targetId ${PullTargetId}
+			/varset PullTargetDistance ${Spawn[id ${PullTargetId}].Distance}
+			/varset PullTargetId ${PullTargetId}
+			/return ${PullTargetId}
 		}
 	}
+		
+	|/if (${DebugMode}) 
+	/echo looking at pull targets			
+	/for i 1 to ${PullTargets.Size}
+		/if (${Bool[${PullTargets[${i}]}]}) {
+			/for spawnIndex 1 to 3
+				/if (${DebugMode}) /echo evaluating pull target ${PullTargets[${i}]}
+				/varset PullTargetEvaluationId ${NearestSpawn[${spawnIndex}, NPC radius ${PullTargetDistance} ${PullTargets[${i}]}].ID}
+				/if (${PullTargetEvaluationId} != 0) {
+					/call ValidateTarget ${PullTargetEvaluationId}
+					/if (${Macro.Return}) {
+						/if (${DebugMode}) /echo setting PullTargetEvaluationId to ${PullTargetEvaluationId} at distance ${Spawn[id ${PullTargetEvaluationId}].Distance}
+						/varset PullTargetDistance ${Spawn[id ${PullTargetEvaluationId}].Distance}
+						/varset PullTargetId ${PullTargetEvaluationId}
+					}
+				}
+			/next spawnIndex
+		}
+	/next i
+				
+	/if (${DebugMode}) /echo GetMainAssistTargetID - Got target ${PullTargetId}
+	/call SelectNewTarget ${PullTargetId}
+
+	/return ${PullTargetId}
 /return FALSE
 
 Sub GetLOSPullTargetId
 	/declare i int local
 	/declare spawnIndex int local
 	/for i 1 to ${LoSPullTargets.Size}
-		/if (${Bool[${LoSPullTargets[${i}]}]}) {
-			/if (${DebugMode}) /echo Evaluating ${LoSPullTargets[${i}]}
-			/for spawnIndex 1 to 3
-				/if (${DebugMode}) /echo evaluating los pull target ${LoSPullTargets[${i}]}
-				/varset PullTargetEvaluationId ${NearestSpawn[${spawnIndex}, NPC radius ${LoSPullRadius} ${LoSPullTargets[${i}]}].ID}
-				/if (${PullTargetEvaluationId}) {
-					/call ValidateTarget ${PullTargetEvaluationId} TRUE
-					/if (${Macro.Return}) {
-						/if (${DebugMode}) /echo Spawn type is good
-						/if (${Spawn[id ${PullTargetEvaluationId}].LineOfSight}) {
-							/if (${DebugMode}) /echo pulling ${Spawn[id ${PullTargetEvaluationId}].CleanName}
-							/varset PullTargetDistance ${Spawn[id ${PullTargetEvaluationId}].Distance}
-							/varset PullTargetId ${PullTargetEvaluationId}
-							/next i
-						} else {
-							/if (${DebugMode}) /echo target ${PullTargetEvaluationId} is not in LOS
-						}
-					}
+		/if (!${Bool[${LoSPullTargets[${i}]}]}) /return ${PullTargetId}
+		/if (${DebugMode}) /echo Evaluating ${LoSPullTargets[${i}]}
+		/for spawnIndex 1 to 3
+			/if (${DebugMode}) /echo evaluating los pull target ${LoSPullTargets[${i}]}
+			/varset PullTargetEvaluationId ${NearestSpawn[${spawnIndex}, LOS NPC radius ${LoSPullRadius} ${LoSPullTargets[${i}]}].ID}
+			/if (${PullTargetEvaluationId}) {
+				/call ValidateTarget ${PullTargetEvaluationId} TRUE
+				/if (${Macro.Return}) {
+					/if (${DebugMode}) /echo Spawn type is good
+					/if (${DebugMode}) /echo pulling ${Spawn[id ${PullTargetEvaluationId}].CleanName}
+					/varset PullTargetDistance ${Spawn[id ${PullTargetEvaluationId}].Distance}
+					/varset PullTargetId ${PullTargetEvaluationId}
+					/next i
 				}
-			/next spawnIndex
-		}
+			}
+		/next spawnIndex
 	/next i
 /return ${PullTargetId}
 
@@ -284,59 +293,52 @@ Sub EvaluateAETargets
 Sub TargetSync(int targetId)
 	/if (${DebugMode}) /echo TargetSync ${targetId} - current target id = ${Target.ID}
 	/if (${targetId} == 0) /return FALSE
-	
+	/if (${Target.ID} == ${targetId}) /return TRUE
 	/target id ${targetId}
 	/delay 1s ${Target.ID} == ${targetId}
 /return ${Target.ID} == ${targetId}
 
 Sub ValidateTarget(int targetId, bool onlyLos)
-	/if (${DebugMode}) /echo ValidateTarget ${targetId} - only los: ${Bool[${onlyLos}]}
+	/declare los bool local ${Spawn[id ${targetId}].LineOfSight}
+	/declare distance float local ${Spawn[id ${targetId}].Distance}
+
+	/if (${DebugMode}) /echo ValidateTarget ${targetId} - only los: ${Bool[${onlyLos}]} - target in los: ${los}
 	/if (${DebugMode}) /echo Target Distance = ${Spawn[id ${targetId}].Distance} - pull target distance = ${PullTargetDistance}
-	/if (${Spawn[id ${targetId}].Type.Equal[Corpse]}) /return FALSE
+	
 	/if (!${Spawn[id ${targetId}].ID}) {
 		/if (${DebugMode}) /echo spawn doesn't exist
 		/call ClearPullTarget
-	}
-	
-	/declare los bool local ${Spawn[id ${targetId}].LineOfSight}
-	
-	/if (${PullMode} && ${onlyLos} && !${los}) {
-		/echo Target ${targetId} is invalid because it's not in LOS
-		/return FALSE
-	}
-	
-	/if (${Me.GroupMarkNPC[2].ID} && ${targetId} == ${Me.GroupMarkNPC[2].ID}) {
-		/echo ${targetId} marknpc2 is set, but it's not the target
-		/return FALSE
+		/return FALSE	
 	}
 
-	/if (${Spawn[id ${targetId}].PctHPs} >= 100 && ${Bool[${onlyLos}]} && !${los} && !${PullMode}) {
-		/if (${DebugMode}) /echo ${targetId} is not in los
-		/return FALSE	
-	}	
-	
-	/if (${Spawn[id ${targetId}].Distance} > ${PullTargetDistance}) {
-		/if (${DebugMode}) /echo ${targetId} is too far away ${Spawn[id ${targetId}].Distance} > ${PullTargetDistance}
-		/if (${PullTargetDistance} == 0) /call ClearPullTarget
-		/return FALSE	
-	}
-	
-	/if (!${Me.XTarget[1].ID} && !${PullMode}) {
-		/if (${Bool[${onlyLos}]} && !${los}) {
-			/if (${DebugMode}) /echo ${targetId} is bad because of LOS
-			/call ClearPullTarget
-			/return FALSE
-		}
-	}
-	
 	/if (!${Spawn[id ${targetId}].Type.Equal[NPC]}) {
 		/if (${DebugMode}) /echo ${targetId} is not an NPC
 		/call ClearPullTarget
 		/return FALSE	
 	}
 	
-	/if (${Spawn[id ${targetId}].Distance} > ${MaxTargetDistance}) {
-		/if (${DebugMode}) /echo ${targetId}'s distance (${Spawn[id ${targetId}].Distance}) is outside of the MaxTargetDistance (${MaxTargetDistance})
+	/if (${PullMode} && ${onlyLos} && !${los}) {
+		/echo Target ${targetId} is invalid because it's not in LOS
+		/call ClearPullTarget
+		/return FALSE
+	}
+	
+	/if (${Me.GroupMarkNPC[2].ID} && ${targetId} == ${Me.GroupMarkNPC[2].ID}) {
+		/echo ${targetId} marknpc2 is set, but it's not the target
+		/call ClearPullTarget
+		/return FALSE
+	}
+	
+	/if (${PullMode}) {
+		/if (${distance} > ${PullTargetDistance}) {
+			/if (${DebugMode}) /echo ${targetId} is too far away ${distance} > ${PullTargetDistance}
+			/if (${PullTargetDistance} == 0) /call ClearPullTarget
+			/return FALSE	
+		}	
+	}
+	
+	/if (${distance} > ${MaxTargetDistance}) {
+		/if (${DebugMode}) /echo ${targetId}'s distance (${distance}) is outside of the MaxTargetDistance (${MaxTargetDistance})
 		/call ClearPullTarget
 		/return FALSE
 	}
@@ -346,17 +348,8 @@ Sub ValidateTarget(int targetId, bool onlyLos)
 		/call ClearPullTarget
 		/return FALSE
 	}
-		
-	/declare i int local
-	/for i 1 to ${BadTargetIds.Size}
-		/if (${Bool[BadTargetIds[${i}]]} && ${BadTargetIds[${i}]} == ${targetId}) {
-			/if (${DebugMode}) /echo target is a badTargetId
-			/call ClearPullTarget
-			/return FALSE
-		}
-	/next i
-	
-	/varset PullTargetDistance ${Spawn[id ${targetId}].Distance}
+
+	/varset PullTargetDistance ${distance}
 	/varset PullTargetId ${targetId}
 	
 	/if (${DebugMode}) /echo Target ${targetId} is valid

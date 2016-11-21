@@ -15,10 +15,9 @@ Sub Main
 	/call Init_RKMeleeBase
 	/call AddToArray "CombatActionSubs" "CheckRecourse"	
 	/call AddToArray "CombatActionSubs" "PriorityCombatActions"
-	/call AddToArray "CombatActionSubs" "ShamanCombatActions"
 	/call Init_RKHealerBase
 	/call AddToArray "CombatActionSubs" "DoCannibalization"	
-	|/call AddToArray "CombatActionSubs" "ShamanCombatActions"
+	/call AddToArray "CombatActionSubs" "ShamanCombatActions"
 	/call AddToArray "BurnCombatActionSubs" "ShamanBurn"
 	/call Init_RKCasterBase
 	
@@ -30,13 +29,13 @@ Sub Main
 
 | *** VARIABLE DECLARATIONS
 
-	/varset SpellMemSlot 8
+	/varset SpellMemSlot 11
 	|/varset ForageMode TRUE
 	/declare ShrinkMode bool outer FALSE
 
 	/varset StickFlags loose
 
-	/varset GlyphMode TRUE
+	/varset GlyphMode FALSE
 	
 	/varset InCombatStickToCommander FALSE
 
@@ -61,10 +60,10 @@ Sub Main
 		/varset GroupHealThreshold 60
 		/varset EmergencyGroupHealThreshold 50
 	} else {
-		/varset TankHealThreshold 95
-		/varset SingleTargetHealThreshold 90
-		/varset GroupHealThreshold 98
-		/varset EmergencyGroupHealThreshold 95
+		/varset TankHealThreshold 89
+		/varset SingleTargetHealThreshold 80
+		/varset GroupHealThreshold 94
+		/varset EmergencyGroupHealThreshold 85
 	}
 
 
@@ -72,15 +71,16 @@ Sub Main
 
 	|/call AddToArray "DetrimentalSpells" "Krasir's Recourse Rk. III"
 	|/call AddToArray "DetrimentalSpells" "Spiritual Swell Rk. III"	
-	/call AddToArray "DetrimentalSpells" "Malosenete Rk. III"
+	|/call AddToArray "DetrimentalSpells" "Malosenete Rk. III"
+	|/call AddToArray "DetrimentalSpells" "Chaotic Venom"
 	/call AddToArray "DetrimentalSpells" "Reefmaw's Bite Rk. III"
-	/call AddToArray "DetrimentalSpells" "Serisaria's Spear of Venom Rk. II"	
 	/call AddToArray "DetrimentalSpells" "Serpentil's Venom Rk. III"
 	/call AddToArray "DetrimentalSpells" "Sephry's Malady Rk. III"
 	/call AddToArray "DetrimentalSpells" "Nectar of Woe Rk. II"	
 	/call AddToArray "DetrimentalSpells" "Sraskus' Curse Rk. III"	
-	/call AddToArray "DetrimentalSpells" "Garugaru Rk. II"
-
+	|/call AddToArray "DetrimentalSpells" "Garugaru Rk. II"
+	|/call AddToArray "DetrimentalSpells" "Serisaria's Spear of Venom Rk. II"	
+	
 	
 	/call AddToArray "DefensiveActionSubs" "Defensives"		
 	/call AddToArray "PreTargetAcquisitionSubs" "CheckWolf"
@@ -113,6 +113,7 @@ Sub Main
 /return
 
 Sub GroupInvis
+	/echo casting group invis
 	/if (!${Me.Invis}) /call RKAACast "Group Silent Presence"
 /return FALSE
 
@@ -120,24 +121,28 @@ Sub GroupInvis
 
 Sub PriorityCombatActions
 	/if (${DebugMode}) /echo Begin Prioirity Combat Actions
-
+	/if (${Me.Moving}) /return FALSE
+	
 	|/echo priority combat
 	/if (${Target.Named} || ${MOBMode} > 1 || !${Me.XTarget[12].ID}) {
-		|/echo casting epic
-		|/cast item "Blessed Spirit Staff of the Heyokah"
-		/if (${InvSlot[pack4].Item.Item[1].TimerReady} == 0) {
-			/echo epic timer is ready
-			/delay 1s
-			/cast item "Blessed Spirit Staff of the Heyokah"			
-			/keypress Ctrl+F5
-			/keypress Ctrl+F5
-			/keypress Ctrl+F5
-			/keypress Ctrl+F5
-			/keypress Ctrl+F5
-			/keypress Ctrl+F5
-			/keypress Ctrl+F5
-			/keypress Ctrl+F5			
-			/delay 1s
+		/if (!${Me.Song[Prophet's Gift of the Ruchu].ID}) {
+			|/echo casting epic
+			|/cast item "Blessed Spiritstaff of the Heyokah"
+			/if (${InvSlot[pack5].Item.Item[1].Name.Equal[Blessed Spiritstaff of the Heyokah]} && ${InvSlot[pack5].Item.Item[1].TimerReady} == 0) {
+				/echo epic timer is ready
+				|/g Shaman epic inc
+				/delay 1s
+				/cast item "Blessed Spiritstaff of the Heyokah"			
+				/keypress Ctrl+F5
+				/keypress Ctrl+F5
+				/keypress Ctrl+F5
+				/keypress Ctrl+F5
+				/keypress Ctrl+F5
+				/keypress Ctrl+F5
+				/keypress Ctrl+F5
+				/keypress Ctrl+F5			
+				|/delay 1s
+			}
 		}
 	}
 
@@ -149,13 +154,13 @@ Sub PriorityCombatActions
 	
 	/call RKCast "Roar of the Lion" ${Me.ID}
 	
-	/if (${Me.GemTimer[Spiritual Swell Rk. III]} == 0 && ${GroupHealthPercentage} < 99) {
+	/if (${Me.GemTimer[Spiritual Swell Rk. III]} == 0 && ${GroupHealthPercentage} < 95) {
 		/echo casting spiritual swell
 		/call RKCast "Spiritual Swell Rk. III" ${CurrentTargetId}
 		
 	}
 	
-	/if (${TankId} && ${Spawn[id ${TankId}].PctHPs} < 80) /return TRUE
+	/if (${TankId} && ${Spawn[id ${TankId}].PctHPs} < 80) /return FALSE
 	
 	/if (${Bool[${Me.XTarget[2].ID}]} && ${Me.AltAbilityReady[Wind of Malosinete]}) /call RKAACast "Wind of Malosinete" ${CurrentTargetId}
 	/if (${Bool[${Me.XTarget[2].ID}]} && ${Bool[${Me.XTarget[3].ID}]} && ${Me.AltAbilityReady[Tigir's Insect Swarm]}) /call RKAACast "Tigir's Insect Swarm" ${CurrentTargetId}
@@ -172,8 +177,9 @@ Sub PriorityCombatActions
 	
 Sub ShamanCombatActions
 	/if (${DebugMode}) /echo Shaman Combat Actions
+	/if (${Me.Moving}) /return FALSE	
 	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
-	/if (${Spawn[id ${TankId}].PctHPs} < 80) /return TRUE	
+	/if (${Spawn[id ${TankId}].PctHPs} < 80) /return FALSE
 
 	/call CheckSingleTargetHealth ${TankId} 95 0 "Reckless Restoration Rk. II"
 	/if (${Macro.Return}) {
@@ -192,10 +198,18 @@ Sub ShamanCombatActions
 	/call RKCast "Shear of Renewal Rk. III" ${CurrentTargetId}
 	/if (${Macro.Return}) /return FALSE
 	
-	/if (${Me.AltAbilityReady[Fundament: Third Spire of Ancestors]}) /call RKAACast "Fundament: Third Spire of Ancestors" ${CurrentTargetId}
+	/if (${Me.Song[Prophet's Gift of the Ruchu].ID}) {
+		/if (${Me.AltAbilityReady[Fundament: Third Spire of Ancestors]}) {
+			/g Third spire inc
+			/call RKAACast "Fundament: Third Spire of Ancestors" ${CurrentTargetId}
+			/if (${Macro.Return}) /return FALSE
+		}
+	}
 
 	/call RKCast "Roar of the Lion" ${Me.ID}
 	/if (${Macro.Return}) /return FALSE
+
+	/if (${Target.PctHPs} > 50) /call RKCast "Chaotic Venom" ${CurrentTargetId}
 	
 	/call RKCast "Reefmaw's Bite Rk. III" ${CurrentTargetId}
 	/if (${Macro.Return}) /return FALSE
@@ -266,12 +280,13 @@ Sub Defensives
 /return FALSE
 
 Sub ShamanBurn
+	/if (${Me.Moving}) /return FALSE
 	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
 	/if (${Spawn[id ${TankId}].PctHPs} < 30) /return FALSE	
 	
 	/if (${Target.Named} || ${MOBMode} > 1) {
 		/if (${InvSlot[pack4].Item.Item[1].TimerReady} == 0) /keypress Ctrl+F5
-		|/cast item "Blessed Spirit Staff of the Heyokah"
+		|/cast item "Blessed Spiritstaff of the Heyokah"
 	}
 	
 	|/call RKItemCast "Circle of Power IV Effect" "Rage of Rolfron"
@@ -312,7 +327,7 @@ Sub ShamanNonCombatSubs
 		/if (${Macro.Return}) /return FALSE
 	}
 	
-	/if (!${Target.ID} && ${Group.Leader.ID} != ${Me.ID}) {
+	/if (!${Me.Moving} && !${Target.ID} && ${Group.Leader.ID} != ${Me.ID}) {
 		/if (${Me.SpellReady[Ferocious Growth Rk. III]}) {
 			/call RKCast "Ferocious Growth Rk. III" ${TankId}
 			/if (${Macro.Return}) /return TRUE
@@ -324,19 +339,14 @@ Sub CheckCheetah
 	/if (${DebugMode}) /echo CheckCheetah
 	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE
 	/if (${Me.Buff[Communion of the Cheetah].ID} && ${Me.Buff[Communion of the Cheetah].Duration} > 80000) /return FALSE
-	/declare wasInvis bool local ${Me.Invis}
 	/call RKAACast "Communion of the Cheetah" ${CurrentTargetId}
-	/if (${wasInvis}) {
-		/call RKAACast "Silent Presence" ${CurrentTargetId}
-	}
+	/if (${BOTMode} < 3) /call RKAACast "Silent Presence" ${CurrentTargetId}
 /return FALSE
 
 Sub CheckRecourse
 	/if (${DebugMode}) /echo Check Recourse
-	/if (${Me.Casting.ID} && !${Me.Class.Name.Equal[Bard]}) /return FALSE	
 	/if (${Me.GemTimer[${Me.Gem[Krasir's Recourse Rk. III]}]} > 0) /return FALSE
-	|/if (${Me.Song[Krasir's Forbearance III].ID} && !${Me.XTarget[3].ID}) /return FALSE 
-	/if (${GroupHealthPercentage} > 95 && !${Me.XTarget[2].ID}) /return FALSE
+	/if (${GroupHealthPercentage} > 98 || !${Me.XTarget[2].ID}) /return FALSE
 	/call RKCast "Krasir's Recourse Rk. III" ${CurrentTargetId}
 /return FALSE
 
@@ -357,13 +367,13 @@ Sub DoCannibalization
 	/if (${Me.Moving}) /return FALSE
 	/if (${Me.PctMana} < ${CannibalizationAAThreshold}) {
 		/call RKAACast "Cannibalization"
-		|/if (${Macro.Return}) /return TRUE
+		/if (${Macro.Return}) /return FALSE
 	}
 	
 	/if (${Me.PctMana} < ${CannibalizationSpellThreshold}) {
 		/if (${Me.SpellReady[${CannibalizationSpellName}]}) {
 			/call RKCast "${CannibalizationSpellName}" ${CurrentTargetId}
-			|/if (${Macro.Return}) /return TRUE
+			/if (${Macro.Return}) /return FALSE
 		}
 	}
 /return FALSE

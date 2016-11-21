@@ -415,5 +415,7 @@ Sub Event_ReceivedTell(eventText, player, language, message)
 /return FALSE
 
 Sub Event_TaskProgress
-	/docommand /${ChatCommand} "got quest update."
+	|/delay 2
+	|/fs got the quest update
+	|/docommand /${ChatCommand} "got quest update."
 /return FALSE

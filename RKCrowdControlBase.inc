@@ -94,34 +94,32 @@ Sub ExecuteCrowdControl
 	/declare i int local 0
 	/for i 1 to ${Me.XTarget}
 		/if (${DebugMode}) /echo checking xtarget ${i}
+		/if (${Me.XTarget[${i}].ID} == ${CurrentTargetId} || ${Me.XTarget[${i}].ID} == ${mainTargetId}) /next i
+
 		/varset ccTargetId ${Me.XTarget[${i}].ID}
-		/if (${Me.XTarget[${i}].ID} != ${CurrentTargetId}) {
-			/call IsMobMezzable ${ccTargetId}
-			/if (${Macro.Return}) {
-				/if (${Spawn[id ${ccTargetId}].Level} <= ${SingleTargetMezLevelCap}) {
-					/if (${ccTargetId} != ${mainTargetId}) {
-						/call GetCrowdControlTimer ${ccTargetId}
-						/varset mezTimer ${Macro.Return}
-						
-						/if (${mezTimer} < 3000) {
-							/call TargetSync ${ccTargetId}
-							/delay 5 ${Bool[${Target.Buff}]}
-							
-							/if (${Target.Buff[${SingleTargetMez}].ID} && ${Target.Buff[${SingleTargetMez}].Duration.TotalSeconds} > 3) {
-								/varcalc mezTimer ${MacroQuest.Running} + (${Target.Buff[${SingleTargetMez}].Duration.TotalSeconds} * 1000)
-								/if (${DebugMode}) /echo target is mezzed - adding timer to dictionary id ${ccTargetId} - ${mezTimer}
-								/call AddToDictionary "MezzedMobTimers" "${ccTargetId}" ${mezTimer}
-								/docommand /${ChatCommand} "CCd ${Target.CleanName}"
-								|/g CCd ${Target.CleanName}
-							} else {
-								/if (${DebugMode}) /echo target needs to be CCd
-								/call CrowdControlTarget ${ccTargetId}
-								/if (${Macro.Return}) /return TRUE
-							}
-						}
-					}
-				}
-			}
+		/call IsMobMezzable ${ccTargetId}
+		/if (!${Macro.Return}) /next i
+
+		/if (${Spawn[id ${ccTargetId}].Level} > ${SingleTargetMezLevelCap}) /next i
+
+		/call GetCrowdControlTimer ${ccTargetId}
+		/varset mezTimer ${Macro.Return}
+			
+		/if (${mezTimer} > 3000) /next i
+
+		/call TargetSync ${ccTargetId}
+		/delay 5 ${Bool[${Target.Buff}]}
+		
+		/if (${Target.Buff[${SingleTargetMez}].ID} && ${Target.Buff[${SingleTargetMez}].Duration.TotalSeconds} > 3) {
+			/varcalc mezTimer ${MacroQuest.Running} + (${Target.Buff[${SingleTargetMez}].Duration.TotalSeconds} * 1000)
+			/if (${DebugMode}) /echo target is mezzed - adding timer to dictionary id ${ccTargetId} - ${mezTimer}
+			/call AddToDictionary "MezzedMobTimers" "${ccTargetId}" ${mezTimer}
+			/docommand /${ChatCommand} "CCd ${Target.CleanName}"
+			|/g CCd ${Target.CleanName}
+		} else {
+			/if (${DebugMode}) /echo target needs to be CCd
+			/call CrowdControlTarget ${ccTargetId}
+			/if (${Macro.Return}) /return TRUE
 		}
 	/next i
 

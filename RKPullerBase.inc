@@ -157,17 +157,16 @@ Sub AddPullTargets
 	}
 	
 	/if (${Zone.ShortName.Equal[brotherisland]}) {
-		/call AddToArray "PullTargets" "praetor"
-		/call AddToArray "PullTargets" "razorlatch"
-		/call AddToArray "PullTargets" "pincer"
 		/call AddToArray "PullTargets" "eyepecker"
 		/call AddToArray "PullTargets" "squawker"
 		/call AddToArray "PullTargets" "furthick"
 		/call AddToArray "PullTargets" "pounder"
 		/call AddToArray "PullTargets" "tasselvine"
 		/call AddToArray "PullTargets" "mulcher"
-		/call AddToArray "PullTargets" "wanderer"
-		/call AddToArray "PullTargets" "siren"
+		/call AddToArray "LoSPullTargets" "razorlatch"
+		/call AddToArray "LoSPullTargets" "pincer"
+		/call AddToArray "LoSPullTargets" "praetor"
+		/call AddToArray "LoSPullTargets" "wanderer"
 	}
 
 	/if (${Zone.ShortName.Equal[deadhills_errand]}) {

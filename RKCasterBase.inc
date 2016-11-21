@@ -468,11 +468,11 @@ Sub RKCast(string spellName, int targetId)
 	/if (${Me.GemTimer[${Me.Gem[${spellName}]}]} > 0) /return FALSE
 
 	/declare previousTargetId int local ${Target.ID}
-	
-	/call TargetSync ${targetId}
-	/if (!${Macro.Return}) /return FALSE
-
-	/if (${previousTargetId} != ${targetId}) /delay 5
+	/if (${previousTargetId} != ${targetId}) {
+		/call TargetSync ${targetId}
+		/if (!${Macro.Return}) /return FALSE
+		/delay 8
+	}
 	
 	/declare twisting bool local (${Twist} && ${Me.Class.Name.Equal[Bard]})
 

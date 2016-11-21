@@ -1,61 +1,82 @@
+#Event HOT_Landed_Self "#*#hot landed self message#*#"
+#Event HOT_Landed "#1#'s hot landed message"
+#Event HOT_Worn_off_Self "#*#hot wore off self message#*#"
+#Event HOT_Worn_off "hot wore off message #1#."
+#Event SnareImmune "#*#Your target is immune to changes in its run speed."
+
 #include RKBase.inc
-#include RKMeleeBase.inc
 #include RKCasterBase.inc
+#include RKMeleeBase.inc
 #include RKHealerBase.inc
 
 Sub Main
 	/call Init_RKBase
 	/call Init_RKMeleeBase
-	/call Init_RKCasterBase
+	/call AddToArray "CombatActionSubs" "ClericCombat"
 	/call Init_RKHealerBase
-	
+	/call Init_RKCasterBase
+
+
 | *** VARIABLE DECLARATIONS
 
-	/varset MaxTargetDistance 5000
-
-	/varset UpperAggroThreshold 100
-	/varset MercBurnThreshold 80
 	/varset InCombatStickToCommander FALSE
-	
-	/varset EmergencyHealSpell Divine Light
-	/varset EmergencyHealThreshold 50
-	
-	/varset HealSpell Divine Light
-	/varset GroupHeal Word of Vigor
 
-	/varset MercBurnThreshold 100
+	/varset TargetHpEngagePercentage 99
+	/varset UpperAggroThreshold 90
+	/varset SpellMemSlot 9
 
-	/varset TankHoTThreshold 0	
-	/varset SingleTargetHoTThreshold 0
+	/varset HealSpell Devout Light
+	/varset TankHealThreshold 80
+	/varset SingleTargetHealThreshold 70
 	
-	/varset TankHealThreshold 85
-	/varset SingleTargetHealThreshold 85
-	/varset GroupHealThreshold 70
-	/varset EmergencyGroupHealThreshold 50
+	/varset EmergencyHealSpell Frenetic Renewal
+	/varset EmergencyHealThreshold 60
 	
-	|/call AddToArray "CombatAbilities" "Bash"	
+	/varset GroupHeal Word of Recovery
+	/varset GroupHealThreshold 90
+	
+	/varset EmergencyGroupHeal Survival of the Fortuitous
+	/varset EmergencyGroupHealThreshold 0
+	
+	/call AddToArray "NonCombatSubs" "ClericNonCombat"
+	/call AddToArray "DefensiveActionSubs" "ExecuteDefensiveActions"
+	/call AddToArray "BurnCombatActionSubs" "ClericBurnActions"
+	
+	/call AddToArray "DetrimentalSpells" "Glorious Denunciation"
 
-	/call AddToArray "PreTargetAcquisitionSubs" "PreTarget"
-	/call AddToArray "CombatActionSubs" "MeleeCombat"
+	|/call AddToArray "CombatTankBuffs" "Shining Rampart Rk. II"
+	/call AddToArray "CombatAbilities" "Bash"
 	
-	/echo Done initializing macro!
-
 | *** INITIALIZATION
-	/echo Feel the wrath of Aftermath faggots.
-
+	/echo Starting Box Commander - Aftermath Macro
 | *** MAIN LOOP
 :loop
 	/call Tick
 	/goto :loop
 /return
 
-Sub PreTarget
+Sub ClericNonCombat
+	/if (!${Bool[${Me.Aura[Circle of Divinity]}]}) /call RKCast "Circle of Divinity" ${Me.ID}
+	/if (!${Bool[${Me.Aura[Aura of the Pious]}]}) /call RKCast "Aura of the Pious" ${Me.ID}	
+
 /return FALSE
 
-Sub MeleeCombat
-	/call RKCast "Yaulp V" ${CurrentTargetId}
-	
-	/if (!${Bool[${Me.Aura[Aura of the Zealot]}]}) /call RKCast "Aura of the Zealot" ${CurrentTargetId}
+Sub ClericCombat
+	/if (${Me.Casting.ID} || ${Me.Moving}) /return FALSE
+
+	/if (${Spawn[id ${TankId}].PctHPs} < 35) /call RKCast "Twelfth Night" ${TankId}
+	/if (${Spawn[id ${TankId}].PctHPs} < 85) /call RKCast "Frenetic Renewal" ${TankId}
+	/if (${Spawn[id ${TankId}].PctHPs} < 85) /call RKCast "Frantic Renewal" ${TankId}	
+
+	|/if (${Target.ID} == ${TankId} && !${Target.Buff[Shining Rampart Rk. II].ID}) /call RKCast "Shining Rampart Rk. II" ${TankId}
 	
 /return FALSE
 
+Sub ClericBurnActions
+
+/return FALSE
+	
+Sub ExecuteDefensiveActions
+
+/return FALSE
+	

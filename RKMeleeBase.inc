@@ -42,7 +42,7 @@ Sub MeleeSubs
 		/if (${AECentroidX} != 0 && ${AECentroidY} != 0) {
 			/if (${IsTank} && ${KeepAgroOnAdds} && ${Bool[${Me.XTarget[2].ID}]}) {
 				/if (${Stick.Active} && ${Target.Distance} < ${MaxMeleeDistance}) {
-					/stick off
+					/call ClearStickTarget
 					/if (${DebugMode}) /echo stick off 3
 				}
 				|/echo facing AE loc
@@ -65,8 +65,8 @@ Sub MeleeSubs
 				/keypress HOME
 			} else {
 				/if (${IsTank} && !${KeepAgroOnAdds} && ${Stick.Active} && ${Target.Type.Equal[NPC]} && ${Target.Distance} < ${MaxMeleeDistance}) {
-					/if (${DebugMode}) /stick off
-					/echo stick off 4
+					/if (${DebugMode}) /echo stick off 4
+					/call ClearStickTarget
 				}
 				/if (${Target.ID}) /face fast nolook
 			}

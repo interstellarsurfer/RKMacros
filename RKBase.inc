@@ -7,6 +7,7 @@
 Sub Init_RKBase
 	/keypress F12
 	/keypress Num_5
+	/timestamp off
 
 	/declare RKCommander string outer ${Group.Leader.Name}
 	/declare OverrideCommander bool outer TRUE
@@ -116,7 +117,7 @@ Sub Init_RKBase
 	|---------- SYSTEM - TARGETING ----------
 	/declare CurrentTargetId int outer 0
 	/declare CurrentStickTargetId int outer 0	
-	/declare BadTargetIds[100] int outer
+	|/declare BadTargetIds[100] int outer
 	
 	|---------- SYSTEM - LIFE CYCLE ----------
 	/declare InvisModeSubs[${DynamicArraySize}] string outer
@@ -179,7 +180,7 @@ Sub Tick
 		/return TRUE
 	}
 	
-	/if (${Spawn[id ${CurrentStickTargetId}].Type.Equal[Corpse]} || (${Target.ID} && ${Target.Type.Equal[PC]} && ${Me.XTarget[1].ID} && ${BOTMode} != 5)) {
+	/if (${Spawn[id ${CurrentStickTargetId}].Type.Equal[Corpse]} || (${Target.ID} && ${Target.Type.Equal[PC]} && ${Me.XTarget[1].ID} && ${BOTMode} > 3 && ${BOTMode} != 5)) {
 		/call ClearStickTarget
 		/target clear
 	}
@@ -206,18 +207,18 @@ Sub Tick
 	}
 	
 	/if (${DebugMode}) /echo tick 3
-
+	
 	/call UpdateMercenaryStance
 	/if (${DebugMode}) /echo mark - 4
 	/call EvaluateTargets
 	/if (${Macro.Return}) /return FALSE
 
 	/if (${DebugMode}) /echo tick 4	
-	
+
 	/call DoCombatRoutine
 	
 	/if (${DebugMode}) /echo mark - 7
-	/if (${Target.Type.Equal[PC]}) /target clear
+	/if (${Target.Type.Equal[PC]} && ${BOTMode} != 1) /target clear
 	
 	/if (${Macro.Return}) /return TRUE
 	
@@ -328,7 +329,7 @@ Sub CheckCommanderAndTank
 
 Sub SelectAndMarkTarget
 	/if (${DebugMode}) /echo Starting targeting sequence
-	/call ClearArray "BadTargetIds"
+	|/call ClearArray "BadTargetIds"
 	/call GetTarget
 	/if (!${Macro.Return}) /return FALSE
 	/if (${DebugMode}) /echo got target
@@ -347,7 +348,8 @@ Sub DoCombatRoutine
 	/if (${DebugMode}) /echo Done with defensives, doing combat routine
 	/if (${DebugMode}) /echo combat tick 1
 	/if (${BOTMode} != 5) {
-		/if (${DebugMode}) /call ExecuteArrayOfSubs "PreTargetAcquisitionSubs"
+		/if (${DebugMode}) /echo doing PreTargetAcquisitionSubs
+		/call ExecuteArrayOfSubs "PreTargetAcquisitionSubs"
 		/if (${Macro.Return}) {
 			/echo Returning early from PreTargetAcquisitionSubs
 			/return TRUE
@@ -357,10 +359,11 @@ Sub DoCombatRoutine
 	}
 	/if (${DebugMode}) /echo combat tick 2
 	
-	/if (${Spawn[id ${CurrentStickTargetId}].Type.Equal[PC]}) {
-		/stick off
+	/if (${Spawn[id ${CurrentStickTargetId}].Type.Equal[PC]} && ${BOTMode} != 1) {
+		/call ClearStickTarget
+		|/stick off
 		/keypress s
-		/delay 3
+		/delay 1
 	}
 		
 	/varset EarlyEscapePreviousTick TRUE
@@ -410,7 +413,7 @@ Sub DoCombatRoutine
 Sub DoOutOfCombatRoutine
 		/if (${DebugMode}) /echo DoOutOfCombatRoutine
 		
-		/if (${BOTMode} < 3 || ${BOTMode} == 5 && ${Me.Invis}) {
+		/if (${BOTMode} < 3 || (${BOTMode} == 5 && ${Me.Invis})) {
 			/call ExecuteArrayOfSubs "InvisModeSubs"
 			/return FALSE
 		}
@@ -421,7 +424,7 @@ Sub DoOutOfCombatRoutine
 		/if (${DebugMode}) /echo mark - 2
 		/if (${LowManaMed}) {
 			/if (${Stick.Active}) {
-				/stick off
+				/call ClearStickTarget
 				/if (${DebugMode}) /echo stick off 1
 			}
 			/declare doneMedding bool local TRUE
@@ -449,8 +452,8 @@ Sub DoOutOfCombatRoutine
 			/if (${MeddingMessageTimer} == 0 && ${ShouldBroadcastMed}) {
 				/docommand /${ChatCommand} "medding, you should med"
 				/varset MeddingMessageTimer 10s
-				/sit on
 			}
+			/sit on
 		}
 
 		/if (${LowManaMed}) /return TRUE

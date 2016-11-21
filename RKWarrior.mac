@@ -16,12 +16,13 @@ Sub Main
 	/varset UpperAggroThreshold 100
 	/varset MercBurnThreshold 100
 	/varset PullWithAutoFire TRUE
+	/varset GlyphMode TRUE
 	
 	/declare TauntMode bool outer ${Bool[${Me.ID} == ${Group.MainTank.ID}]}
 	
-	/varset StickDistance 18
+	/varset StickDistance 17
 
-	/call AddToArray "CombatDiscs" "Shield Topple"
+	/call AddToArray "CombatDiscs" "Shield Break"
 	/call AddToArray "CombatDiscs" "Throat Jab"
 	/call AddToArray "CombatDiscs" "Tempestuous Defense Discipline"	
 	/call AddToArray "CombatDiscs" "Warrior's Bulwark Rk. III"
@@ -78,6 +79,17 @@ Sub WarriorNonCombat
 		|/return TRUE
 	}
 
+	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${PullMode}) {
+		/if (${Target.Distance} > 20 && ${Target.Distance} < 200) {
+			/call RKAACast "Battle Leap" ${CurrentTargetId}
+			/if (${Macro.Return}) {
+				/if (${Stick.Active}) /call ClearStickTarget
+				/delay 1
+				/face fast nolook
+			}
+		}
+	}
+	
 	/if (${Me.PctEndurance} < 29) {
 		/if (${Me.CombatAbilityReady[Breather Rk. III]}) {
 			/if (${Bool[${Me.ActiveDisc}]}) {
@@ -100,12 +112,18 @@ Sub WarriorCombatActions
 	
 	/call RKItemCast "Circle of Power IV Effect" "Rage of Rolfron"
 
+	/if (${TauntMode}) {
+		/if (!${Me.Buff[Harmonious Expanse Effect].ID}) {
+			/call RKDisc "Harmonious Expanse"
+		}
+	}
+	
 	/if (${Target.PctAggro} < 100) {
 		/call RKDisc "Tormenting Shout Rk. III"
 	}
 	
 	/if (${CurrentStickTargetId} == ${RKCommanderId} && ${Stick.Active}) {
-		/stick off
+		/call ClearStickTarget
 		/return FALSE
 	}
 
@@ -123,9 +141,11 @@ Sub WarriorCombatActions
 		/if (${Target.Distance} > 20 && ${Target.Distance} < 80) {
 			/call RKAACast "Battle Leap" ${CurrentTargetId}
 			/if (${Macro.Return}) {
-				/if (${Stick.Active}) /stick off
-				/delay 1s
-				/face fast nolook
+				/if (${Stick.Active}) {
+					/call ClearStickTarget
+					/delay 1
+					/face fast nolook
+				}
 			}
 		}
 	}

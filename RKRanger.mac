@@ -23,7 +23,8 @@ Sub Main
 	|/varset SingleTargetMez2 Blusterbolt Rk. II
 	|/varset MezSub RangerCC
 	|/varset SingleTargetMezLevelCap 120
-
+	/varset GlyphMode FALSE
+	
 	/varset InCombatStickToCommander FALSE
 	
 	/declare SnareMode bool outer TRUE
@@ -50,9 +51,9 @@ Sub Main
 	
 	/call AddToArray "InvisModeSubs" "PeriodicGroupInvis"
 	
-	/call AddToArray "DetrimentalSpells" "Anticipated Shots Rk. II"
+	/call AddToArray "DetrimentalSpells" "Anticipated Shots Rk. III"
 	/call AddToArray "DetrimentalSpells" "Focused Arrowrain Rk. II"
-	/call AddToArray "DetrimentalSpells" "Swarm of Glistenwings Rk. II"
+	/call AddToArray "DetrimentalSpells" "Swarm of Glistenwings Rk. III"
 
 		
 	/call AddToArray "GiftSpells" "Summer's Cyclone Rk. II"
@@ -95,6 +96,7 @@ Sub RangerNonCombatSubs
 /return FALSE
 
 Sub RangerBurn
+	/if (${Me.Moving}) /return FALSE
 	|/call RKDebuffCast "Blisterbeetle Swarm Rk. II" "Blisterbeetle Swarm Rk. II" ${CurrentTargetId}
 	/call RKAACast "Fundament: Third Spire of the Pathfinders" ${CurrentTargetId}
 	/call RKAACast "Auspice of the Hunter" ${CurrentTargetId}
@@ -103,7 +105,7 @@ Sub RangerBurn
 	
 	/call RKCast "Dichotomic Fusillade" ${CurrentTargetId}
 
-	/call RKDisc "Reflexive Bladespurs Rk. II"
+	/call RKDisc "Reflexive Nettlespears"
 	/disc "Copsestalker's Discipline Rk. II"
 	|/call RKDisc "Warder's Wrath"
 	
@@ -115,11 +117,15 @@ Sub RangerBurn
 
 Sub ExecuteRangerCombatActions
 	/if (${Target.Type.Equal[PC]}) /return FALSE
-
+	/if (${Me.Moving}) /return FALSE
+	
 	/if (${Target.Distance} < 25) {
 		/doability 1
 		/doability 2
 	}
+
+	/if (!${Me.AltAbility[Glyph of Arcane Secrets II]} && ${Me.AAPoints} > 10) /alt buy 7017
+	/if (!${Me.Buff[Glyph of Lost Secrets].ID} && ${Me.AltAbility[Glyph of Arcane Secrets II]}) /alt act 7017
 	
 	/if (${Me.PctMana} > 50) {
 		/call RKCast "Dichotomic Fusillade" ${CurrentTargetId}
@@ -133,7 +139,7 @@ Sub ExecuteRangerCombatActions
 	
 	/if (${Target.Distance} > 30 && !${Me.AutoFire}) /autofire
 	
-	/if (${Target.Distance} < 15 && ${Stick.Active}) /stick off
+	/if (${Target.Distance} < 15 && ${Stick.Active}) /call ClearStickTarget
 
 	/if (${Me.PctMana} > 50) {
 		/call RKCast "Wildfire Boon Rk. II" ${CurrentTargetId}
@@ -153,16 +159,16 @@ Sub ExecuteRangerCombatActions
 			}
 		}
 
-		/call RKDisc "Focused Storm of Blades Rk. II"
+		/call RKDisc "Focused Squall of Blades"
 		|/if (${Me.XTarget[2].ID}) {
 		|	/call RKDisc "Squall of Blades Rk. II"
 		|} else {
 		|}
 	}
 	
-	/call RKCast "Anticipated Shots Rk. II" ${CurrentTargetId}
+	/call RKCast "Anticipated Shots Rk. III" ${CurrentTargetId}
 	/call RKCast "Focused Arrowrain Rk. II" ${CurrentTargetId}
-	/call RKCast "Swarm of Glistenwings Rk. II" ${CurrentTargetId}
+	/call RKCast "Swarm of Glistenwings Rk. III" ${CurrentTargetId}
 	
 	/if (${Target.PctHPs} < 30) /return FALSE
 	
